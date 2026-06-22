@@ -31,6 +31,8 @@ export function setWeatherVisible(visible) {
 }
 
 export async function fetchCloudTiles(apiKey) {
+  if (!_ctx || !_texture) return
+  _ctx.clearRect(0, 0, CANVAS_PX, CANVAS_PX)
   const loads = []
   for (let y = 0; y < GRID; y++) {
     for (let x = 0; x < GRID; x++) {
