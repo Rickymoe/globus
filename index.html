@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planet Simulator</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <aside id="panel">
+    <h2>Planet Simulator</h2>
+
+    <label>🌊 Havnivå
+      <input type="range" id="sea-level" min="0" max="100" value="50">
+    </label>
+
+    <label>🌍 Gravitasjon
+      <input type="range" id="gravity" min="0" max="100" value="50">
+    </label>
+
+    <label>💨 Vindretning
+      <input type="range" id="wind-direction" min="0" max="360" value="90">
+      <span id="wind-arrow">→</span>
+    </label>
+
+    <label class="toggle-row">
+      <span>👁 Gjennomsiktig</span>
+      <input type="checkbox" id="toggle-transparent">
+    </label>
+
+    <label class="toggle-row">
+      <span>☁️ Skylag</span>
+      <input type="checkbox" id="toggle-clouds" checked>
+    </label>
+
+    <button id="btn-refresh-weather">🔄 Oppdater vær</button>
+
+    <div id="owm-key-section">
+      <label>OWM API-nøkkel
+        <input type="text" id="owm-api-key" placeholder="din_nøkkel_her">
+      </label>
+    </div>
+  </aside>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
