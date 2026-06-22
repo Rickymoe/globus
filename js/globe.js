@@ -7,12 +7,14 @@ export function initScene(container) {
   _scene = new THREE.Scene()
   _clock = new THREE.Clock()
 
-  _camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000)
+  const w = container.clientWidth || window.innerWidth
+  const h = container.clientHeight || window.innerHeight
+  _camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 1000)
   _camera.position.z = 250
 
   _renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
-  _renderer.setPixelRatio(window.devicePixelRatio)
-  _renderer.setSize(container.clientWidth, container.clientHeight)
+  _renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  _renderer.setSize(w, h)
   container.appendChild(_renderer.domElement)
 
   _controls = new OrbitControls(_camera, _renderer.domElement)
@@ -29,21 +31,26 @@ export function initScene(container) {
   _scene.add(sun)
 
   window.addEventListener('resize', () => {
-    _camera.aspect = container.clientWidth / container.clientHeight
+    const rw = container.clientWidth || window.innerWidth
+    const rh = container.clientHeight || window.innerHeight
+    _camera.aspect = rw / rh
     _camera.updateProjectionMatrix()
-    _renderer.setSize(container.clientWidth, container.clientHeight)
+    _renderer.setSize(rw, rh)
   })
 
   return { scene: _scene }
 }
 
 export function startLoop(onFrame) {
+  if (!_clock) throw new Error('initScene must be called before startLoop')
+  let rafId
   function animate() {
-    requestAnimationFrame(animate)
+    rafId = requestAnimationFrame(animate)
     const delta = _clock.getDelta()
     _controls.update()
     onFrame(delta)
     _renderer.render(_scene, _camera)
   }
   animate()
+  return () => cancelAnimationFrame(rafId)
 }
