@@ -7,16 +7,13 @@ let _terrainMesh, _waterMesh
 export function initTerrain(scene) {
   const loader = new THREE.TextureLoader()
 
-  const colorMap    = loader.load(BASE + 'earth_atmos_2048.jpg')
-  const normalMap   = loader.load(BASE + 'earth_normal_2048.jpg')
-  const displacementMap = loader.load(BASE + 'earth_specular_2048.jpg')
+  const colorMap  = loader.load(BASE + 'earth_atmos_2048.jpg')
+  const normalMap = loader.load(BASE + 'earth_normal_2048.jpg')
 
-  const terrainGeo = new THREE.SphereGeometry(100, 256, 256)
+  const terrainGeo = new THREE.SphereGeometry(100, 64, 64)
   const terrainMat = new THREE.MeshStandardMaterial({
     map: colorMap,
     normalMap,
-    displacementMap,
-    displacementScale: 3,
     roughness: 0.8,
     metalness: 0.1,
     transparent: true,
