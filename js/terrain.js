@@ -24,10 +24,10 @@ export function initTerrain(scene) {
 
   const waterGeo = new THREE.SphereGeometry(101, 64, 64)
   const waterMat = new THREE.MeshPhongMaterial({
-    color: 0x1565c0,
+    color: 0x1a6eb5,
     transparent: true,
-    opacity: 0.75,
-    shininess: 80,
+    opacity: 0.15,
+    shininess: 120,
   })
   _waterMesh = new THREE.Mesh(waterGeo, waterMat)
   scene.add(_waterMesh)
