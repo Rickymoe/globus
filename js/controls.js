@@ -27,4 +27,5 @@ export function initControls({ onSeaLevel, onOpacity, onWeatherToggle, onWeather
   onGravity(Number(gravSlider.value))
   onWind(Number(windSlider.value))
   onOpacity(chkTransparent.checked)
+  onWeatherToggle(chkClouds.checked)
 }
