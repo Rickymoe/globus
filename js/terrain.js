@@ -12,15 +12,13 @@ export function initTerrain(scene) {
 
   const geo = new THREE.SphereGeometry(100, 64, 64)
 
-  // Back faces rendered first — shows far side of Earth through transparent front
-  _backMesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+  // Back faces rendered first — MeshBasicMaterial so lighting doesn't darken far side
+  _backMesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
     map: colorMap,
     side: THREE.BackSide,
     transparent: true,
     opacity: 0,
     depthWrite: false,
-    roughness: 0.8,
-    metalness: 0.1,
   }))
   scene.add(_backMesh)
 
@@ -70,8 +68,8 @@ export function setSeaLevel(value) {
 export function setOpacity(transparent) {
   if (!_terrainMesh) return
   if (transparent) {
-    _terrainMesh.material.opacity = 0.55
-    _backMesh.material.opacity = 0.22
+    _terrainMesh.material.opacity = 0.45
+    _backMesh.material.opacity = 0.55
     _wireMesh.visible = true
   } else {
     _terrainMesh.material.opacity = 1.0
