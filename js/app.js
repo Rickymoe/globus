@@ -1,7 +1,7 @@
 import { initScene, startLoop } from './globe.js'
 import { initTerrain, setSeaLevel, setOpacity } from './terrain.js'
 import { initWeather, fetchCloudTiles, setWeatherVisible } from './weather.js'
-import { initParticles, setGravity, setWindDirection, updateParticles } from './particles.js'
+import { setGravity, setWindDirection } from './particles.js'
 import { initControls } from './controls.js'
 
 function main() {
@@ -10,7 +10,6 @@ function main() {
 
   initTerrain(scene)
   initWeather(scene)
-  initParticles(scene)
 
   initControls({
     onSeaLevel: setSeaLevel,
@@ -24,7 +23,7 @@ function main() {
     onWind: setWindDirection,
   })
 
-  startLoop((delta) => updateParticles(delta))
+  startLoop(() => {})
 }
 
 main()
