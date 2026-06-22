@@ -49,7 +49,11 @@ export function updateParticles(delta) {
     let x = _pos[ix], y = _pos[iy], z = _pos[iz]
 
     const dist = Math.sqrt(x*x + y*y + z*z)
+    if (dist < 1e-6) continue
     const nx = x/dist, ny = y/dist, nz = z/dist
+
+    // dampen velocity to prevent unbounded accumulation
+    _vel[ix] *= 0.97; _vel[iy] *= 0.97; _vel[iz] *= 0.97
 
     // pull toward surface
     _vel[ix] -= nx * _gravity * delta
