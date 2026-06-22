@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 const BASE = 'https://threejs.org/examples/textures/planets/'
 
-let _terrainMesh, _waterMesh, _wireMesh
+let _terrainMesh, _backMesh, _waterMesh, _wireMesh
 
 export function initTerrain(scene) {
   const loader = new THREE.TextureLoader()
@@ -10,37 +10,54 @@ export function initTerrain(scene) {
   const colorMap  = loader.load(BASE + 'earth_atmos_2048.jpg')
   const normalMap = loader.load(BASE + 'earth_normal_2048.jpg')
 
-  const terrainGeo = new THREE.SphereGeometry(100, 64, 64)
-  const terrainMat = new THREE.MeshStandardMaterial({
+  const geo = new THREE.SphereGeometry(100, 64, 64)
+
+  // Back faces rendered first — shows far side of Earth through transparent front
+  _backMesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+    map: colorMap,
+    side: THREE.BackSide,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    roughness: 0.8,
+    metalness: 0.1,
+  }))
+  scene.add(_backMesh)
+
+  // Front faces — normal view
+  _terrainMesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
     map: colorMap,
     normalMap,
     roughness: 0.8,
     metalness: 0.1,
     transparent: true,
     opacity: 1.0,
-  })
-  _terrainMesh = new THREE.Mesh(terrainGeo, terrainMat)
+  }))
   scene.add(_terrainMesh)
 
-  const wireGeo = new THREE.SphereGeometry(100.5, 36, 36)
-  const wireMat = new THREE.MeshBasicMaterial({
-    color: 0x44aaff,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.18,
-  })
-  _wireMesh = new THREE.Mesh(wireGeo, wireMat)
+  // Lat/lon grid lines — visible in transparent mode
+  _wireMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(100.5, 36, 18),
+    new THREE.MeshBasicMaterial({
+      color: 0x88ccff,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.12,
+    })
+  )
   _wireMesh.visible = false
   scene.add(_wireMesh)
 
-  const waterGeo = new THREE.SphereGeometry(101, 64, 64)
-  const waterMat = new THREE.MeshPhongMaterial({
-    color: 0x1a6eb5,
-    transparent: true,
-    opacity: 0.15,
-    shininess: 120,
-  })
-  _waterMesh = new THREE.Mesh(waterGeo, waterMat)
+  // Water sphere
+  _waterMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(101, 64, 64),
+    new THREE.MeshPhongMaterial({
+      color: 0x1a6eb5,
+      transparent: true,
+      opacity: 0.15,
+      shininess: 120,
+    })
+  )
   scene.add(_waterMesh)
 }
 
@@ -52,6 +69,13 @@ export function setSeaLevel(value) {
 
 export function setOpacity(transparent) {
   if (!_terrainMesh) return
-  _terrainMesh.material.opacity = transparent ? 0.45 : 1.0
-  _wireMesh.visible = transparent
+  if (transparent) {
+    _terrainMesh.material.opacity = 0.55
+    _backMesh.material.opacity = 0.22
+    _wireMesh.visible = true
+  } else {
+    _terrainMesh.material.opacity = 1.0
+    _backMesh.material.opacity = 0
+    _wireMesh.visible = false
+  }
 }
