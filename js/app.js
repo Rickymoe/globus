@@ -3,7 +3,7 @@ import { initTerrain, setSeaLevel, setOpacity } from './terrain.js'
 import { initWeather, fetchCloudTiles, setWeatherVisible } from './weather.js'
 import { setGravity, setWindDirection } from './particles.js'
 import { initControls } from './controls.js'
-import { initBorders } from './borders.js'
+import { initBorders, setBordersVisible } from './borders.js'
 
 function main() {
   const container = document.getElementById('canvas-container')
@@ -25,6 +25,7 @@ function main() {
     },
     onGravity: setGravity,
     onWind: setWindDirection,
+    onBorders: setBordersVisible,
     onReset: resetCamera,
   })
 

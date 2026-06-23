@@ -2,6 +2,11 @@ import * as THREE from 'three'
 import { mesh } from 'topojson-client'
 
 const R = 101.5  // above water sphere (r=101) so depth test passes correctly
+let _lines = null
+
+export function setBordersVisible(visible) {
+  if (_lines) _lines.visible = visible
+}
 
 function latLonToVec3(lat, lon) {
   const phi   = (90 - lat) * Math.PI / 180
@@ -34,9 +39,10 @@ export async function initBorders(scene) {
   const geo = new THREE.BufferGeometry()
   geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
 
-  scene.add(new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
+  _lines = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
     color: 0xffee44,
     transparent: true,
     opacity: 0.8,
-  })))
+  }))
+  scene.add(_lines)
 }
