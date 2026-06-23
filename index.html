@@ -22,31 +22,19 @@
       <span class="compass-n">N</span>
       <span class="compass-s">S</span>
     </div>
-    <div id="transparent-toggle" title="Gjennomsiktig modus">
-      <span class="toggle-icon">👁</span>
+    <div id="clouds-toggle" class="float-toggle active" title="Skylag">
+      <span class="toggle-icon">☁️</span>
       <div class="toggle-track"><div class="toggle-thumb"></div></div>
     </div>
-    <div id="borders-toggle" class="active" title="Landegrenser">
+    <div id="borders-toggle" class="float-toggle active" title="Landegrenser">
       <span class="toggle-icon">🗺</span>
       <div class="toggle-track"><div class="toggle-thumb"></div></div>
     </div>
-  </div>
-  <aside id="panel">
-    <h2>Planet Simulator</h2>
-
-    <label class="toggle-row">
-      <span>☁️ Skylag</span>
-      <input type="checkbox" id="toggle-clouds" checked>
-    </label>
-
-    <button id="btn-refresh-weather">🔄 Oppdater vær</button>
-
-    <div id="owm-key-section">
-      <label>OWM API-nøkkel
-        <input type="text" id="owm-api-key" placeholder="din_nøkkel_her">
-      </label>
+    <div id="transparent-toggle" class="float-toggle" title="Gjennomsiktig modus">
+      <span class="toggle-icon">👁</span>
+      <div class="toggle-track"><div class="toggle-thumb"></div></div>
     </div>
-  </aside>
+  </div>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

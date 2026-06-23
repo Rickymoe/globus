@@ -1,24 +1,20 @@
+function makeToggle(id, onChange) {
+  const el = document.getElementById(id)
+  el.addEventListener('click', () => {
+    el.classList.toggle('active')
+    onChange(el.classList.contains('active'))
+  })
+  return el
+}
+
 export function initControls({ onSeaLevel, onOpacity, onWeatherToggle, onWeatherRefresh, onGravity, onWind, onBorders, onReset }) {
-  const transparentToggle = document.getElementById('transparent-toggle')
-  const bordersToggle     = document.getElementById('borders-toggle')
-  const chkClouds         = document.getElementById('toggle-clouds')
-  const btnRefresh        = document.getElementById('btn-refresh-weather')
+  const cloudsToggle      = makeToggle('clouds-toggle',      onWeatherToggle)
+  const bordersToggle     = makeToggle('borders-toggle',     onBorders)
+  const transparentToggle = makeToggle('transparent-toggle', onOpacity)
 
-  transparentToggle.addEventListener('click', () => {
-    transparentToggle.classList.toggle('active')
-    onOpacity(transparentToggle.classList.contains('active'))
-  })
-
-  bordersToggle.addEventListener('click', () => {
-    bordersToggle.classList.toggle('active')
-    onBorders(bordersToggle.classList.contains('active'))
-  })
-
-  chkClouds.addEventListener('change', () => onWeatherToggle(chkClouds.checked))
-  btnRefresh.addEventListener('click', onWeatherRefresh)
   document.getElementById('compass')?.addEventListener('click', onReset)
 
-  onOpacity(false)
+  onWeatherToggle(cloudsToggle.classList.contains('active'))
   onBorders(bordersToggle.classList.contains('active'))
-  onWeatherToggle(chkClouds.checked)
+  onOpacity(transparentToggle.classList.contains('active'))
 }
