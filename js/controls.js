@@ -8,7 +8,7 @@ export function initControls({ onSeaLevel, onOpacity, onWeatherToggle, onWeather
   chkTransparent.addEventListener('change', () => onOpacity(chkTransparent.checked))
   chkClouds.addEventListener('change', () => onWeatherToggle(chkClouds.checked))
   btnRefresh.addEventListener('click', onWeatherRefresh)
-  document.getElementById('compass').addEventListener('click', onReset)
+  document.getElementById('compass')?.addEventListener('click', onReset)
 
   onOpacity(chkTransparent.checked)
   onWeatherToggle(chkClouds.checked)

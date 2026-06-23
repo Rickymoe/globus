@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { mesh } from 'topojson-client'
 
-const R = 100.5  // just above terrain surface to avoid z-fighting
+const R = 101.5  // above water sphere (r=101) so depth test passes correctly
 
 function latLonToVec3(lat, lon) {
   const phi   = (90 - lat) * Math.PI / 180
@@ -37,6 +37,6 @@ export async function initBorders(scene) {
   scene.add(new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
     color: 0xffee44,
     transparent: true,
-    opacity: 0.7,
+    opacity: 0.8,
   })))
 }
