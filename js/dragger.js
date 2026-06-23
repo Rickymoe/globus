@@ -64,7 +64,7 @@ function buildLines(geom) {
 
 function select(f) {
   if (_selectedGroup) { _scene.remove(_selectedGroup); _selectedGroup = null }
-  if (!f) { _selectedCentroid = null; return }
+  if (!f) { _selectedCentroid = null; _canvas.style.cursor = ''; return }
 
   _selectedCentroid = f.centroid3d.clone().normalize().multiplyScalar(R)
   _selectedGroup = new THREE.Group()
@@ -107,27 +107,39 @@ function onPointerDown(e) {
   _isDragging = true
   _prevPt = pt
   _controls.enabled = false
+  _canvas.style.cursor = 'grabbing'
   _canvas.setPointerCapture(e.pointerId)
   e.stopImmediatePropagation()
 }
 
+function isNearCentroid(e) {
+  if (!_selectedCentroid) return false
+  const sc = centroidScreenPos()
+  return Math.hypot(e.clientX - sc.x, e.clientY - sc.y) < GRAB_PX
+}
+
 function onPointerMove(e) {
-  if (!_isDragging || !_prevPt) return
-  e.stopImmediatePropagation()
-  const pt = spherePoint(e)
-  if (!pt) return
+  if (_isDragging) {
+    e.stopImmediatePropagation()
+    const pt = spherePoint(e)
+    if (!pt) return
+    const from = _prevPt.clone().normalize()
+    const to   = pt.clone().normalize()
+    const axis  = new THREE.Vector3().crossVectors(from, to)
+    if (axis.lengthSq() < 1e-12) { _prevPt = pt; return }
+    axis.normalize()
+    const angle = Math.acos(Math.min(1, Math.max(-1, from.dot(to))))
+    const q = new THREE.Quaternion().setFromAxisAngle(axis, angle)
+    _selectedGroup.quaternion.premultiply(q)
+    _selectedCentroid.applyQuaternion(q)
+    _prevPt = pt
+    return
+  }
 
-  const from = _prevPt.clone().normalize()
-  const to   = pt.clone().normalize()
-  const axis  = new THREE.Vector3().crossVectors(from, to)
-  if (axis.lengthSq() < 1e-12) { _prevPt = pt; return }
-  axis.normalize()
-  const angle = Math.acos(Math.min(1, Math.max(-1, from.dot(to))))
-  const q = new THREE.Quaternion().setFromAxisAngle(axis, angle)
-
-  _selectedGroup.quaternion.premultiply(q)
-  _selectedCentroid.applyQuaternion(q)
-  _prevPt = pt
+  // Cursor feedback: show grab hand when hovering over selected country
+  if (_dragModeEnabled) {
+    _canvas.style.cursor = isNearCentroid(e) ? 'grab' : ''
+  }
 }
 
 function onPointerUp(e) {
@@ -135,6 +147,7 @@ function onPointerUp(e) {
     _isDragging = false
     _prevPt = null
     _controls.enabled = true
+    _canvas.style.cursor = isNearCentroid(e) ? 'grab' : ''
     e.stopImmediatePropagation()
     return
   }
@@ -184,5 +197,5 @@ export async function initDragger(scene, camera, controls, canvas) {
 
 export function setDragMode(enabled) {
   _dragModeEnabled = enabled
-  if (!enabled) { select(null); _controls.enabled = true }
+  if (!enabled) { select(null); _controls.enabled = true; _canvas.style.cursor = '' }
 }
