@@ -49,7 +49,11 @@ function makeLabel(name) {
   return sprite
 }
 
+// Minimum apparent half-angle (radians) — planet is scaled up to maintain this
+const MIN_ANGLE = 0.005
+
 let _group = null
+const _planetMeshes = []  // { mesh, label, baseR }
 
 export function initSolarSystem(scene) {
   _group = new THREE.Group()
@@ -80,12 +84,30 @@ export function initSolarSystem(scene) {
     label.position.copy(planetPos(d))
     label.position.y += d.r + 20
     _group.add(label)
+
+    _planetMeshes.push({ mesh, label, baseR: d.r })
   }
 
   // Earth orbit line (around origin)
   _group.add(makeOrbitLine(1.0, 0x4fc3f7))
 
   scene.add(_group)
+}
+
+export function updatePlanetScales(camera) {
+  if (!_group?.visible) return
+  for (const { mesh, label, baseR } of _planetMeshes) {
+    const dist  = camera.position.distanceTo(mesh.position)
+    const minR  = dist * Math.tan(MIN_ANGLE)
+    const scale = Math.max(1, minR / baseR)
+    mesh.scale.setScalar(scale)
+    // Keep label just above the scaled planet
+    label.position.copy(mesh.position)
+    label.position.y += baseR * scale + 20 * scale
+    // Scale label too so it stays readable
+    const ls = Math.max(1, scale * 0.6)
+    label.scale.set(120 * ls, 30 * ls, 1)
+  }
 }
 
 export function setSolarSystemVisible(visible) {

@@ -9,7 +9,7 @@ import { initLatLines, setEquatorVisible } from './latlines.js'
 import { initCapitals, setCapitalsVisible } from './capitals.js'
 import { initWeatherClick, setWeatherClickEnabled } from './yr-weather.js'
 import { initStars } from './stars.js'
-import { initSolarSystem, setSolarSystemVisible } from './solar-system.js'
+import { initSolarSystem, setSolarSystemVisible, updatePlanetScales } from './solar-system.js'
 
 function main() {
   const container = document.getElementById('canvas-container')
@@ -42,6 +42,7 @@ initBorders(scene)
 
   startLoop(() => {
     needle.style.transform = `rotate(${getCompassAngle()}deg)`
+    updatePlanetScales(getCamera())
   })
 }
 
