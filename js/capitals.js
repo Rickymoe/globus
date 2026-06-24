@@ -18,7 +18,7 @@ function makeCircleTexture() {
   const ctx = canvas.getContext('2d')
   ctx.beginPath()
   ctx.arc(16, 16, 11, 0, Math.PI * 2)
-  ctx.fillStyle = '#ffffff'
+  ctx.fillStyle = '#e53935'
   ctx.fill()
   ctx.strokeStyle = 'rgba(0,0,0,0.5)'
   ctx.lineWidth = 2
