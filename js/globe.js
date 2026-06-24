@@ -5,6 +5,7 @@ let _scene, _camera, _renderer, _controls, _clock
 let _resetting = false
 let _ambient, _sunLight, _sunVisual, _moon
 let _lastSunMinute = -1
+let _moonTipEnabled = false
 const SUN_RADIUS = 2000   // 1 AU
 const MOON_ORBIT = 200
 
@@ -102,6 +103,8 @@ export function initScene(container) {
   _moon.position.copy(calcMoonPosition())
   _scene.add(_moon)
 
+  _initMoonTooltip(container)
+
   window.addEventListener('resize', () => {
     const rw = container.clientWidth || window.innerWidth
     const rh = container.clientHeight || window.innerHeight
@@ -111,6 +114,52 @@ export function initScene(container) {
   })
 
   return { scene: _scene }
+}
+
+function _initMoonTooltip(container) {
+  const tip = document.createElement('div')
+  tip.style.cssText = [
+    'position:absolute', 'pointer-events:none', 'display:none',
+    'background:rgba(8,8,8,0.85)', 'color:#e0e0e0',
+    'border:1px solid rgba(255,255,255,0.18)', 'border-radius:10px',
+    'padding:9px 13px', 'font-family:system-ui,sans-serif',
+    'font-size:13px', 'line-height:1.6', 'white-space:nowrap',
+    'backdrop-filter:blur(4px)', 'z-index:99',
+  ].join(';')
+  container.appendChild(tip)
+
+  const ray = new THREE.Raycaster()
+
+  _renderer.domElement.addEventListener('pointermove', e => {
+    if (!_moon) return
+    const rect = _renderer.domElement.getBoundingClientRect()
+    const ndc  = new THREE.Vector2(
+      ((e.clientX - rect.left) / rect.width)  *  2 - 1,
+      ((e.clientY - rect.top)  / rect.height) * -2 + 1,
+    )
+    ray.setFromCamera(ndc, _camera)
+    if (!_moonTipEnabled) { tip.style.display = 'none'; return }
+    const hits = ray.intersectObject(_moon)
+    if (!hits.length) { tip.style.display = 'none'; return }
+
+    // Fraction of visible face that is lit: 1 = full day, 0 = full night
+    const sunDir = (_sunLight.visible ? _sunLight.position : new THREE.Vector3(1, 0, 0))
+      .clone().sub(_moon.position).normalize()
+    const camDir = _camera.position.clone().sub(_moon.position).normalize()
+    const lit    = (sunDir.dot(camDir) + 1) / 2   // 0–1
+    const temp   = Math.round(-173 + lit * 300)    // −173 °C … +127 °C
+    const side   = lit > 0.55 ? 'Dagsiden' : lit < 0.45 ? 'Nattside' : 'Terminator'
+    const emoji  = temp > 50 ? '🌡' : temp > 0 ? '🌡' : '🥶'
+
+    tip.innerHTML = `${emoji} <b>${temp > 0 ? '+' : ''}${temp}°C</b> <span style="color:#777;font-size:11px">${side}</span>`
+    tip.style.display = 'block'
+    tip.style.left = (e.clientX - rect.left + 14) + 'px'
+    tip.style.top  = (e.clientY - rect.top  - 36) + 'px'
+  })
+}
+
+export function setMoonTempEnabled(enabled) {
+  _moonTipEnabled = enabled
 }
 
 export function setSunEnabled(enabled) {

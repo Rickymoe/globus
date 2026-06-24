@@ -160,6 +160,9 @@ function onPointerUp(e) {
   _downPos = null
   if (Math.hypot(dx, dy) > 6) return  // was a drag, not a click
 
+  // Second click hides the popup (toggle behaviour)
+  if (_popup.style.display !== 'none') { _popup.style.display = 'none'; return }
+
   const hit = sphereHit(e)
   if (!hit) return
   const [lat, lon] = vec3ToLatLon(hit)
