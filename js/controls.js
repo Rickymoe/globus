@@ -7,13 +7,14 @@ function makeToggle(id, onChange) {
   return el
 }
 
-export function initControls({ onOpacity, onBorders, onLabels, onDragMode, onEquator, onCapitals, onWeatherClick, onReset }) {
+export function initControls({ onOpacity, onBorders, onLabels, onDragMode, onEquator, onCapitals, onSun, onWeatherClick, onReset }) {
   const dragToggle        = makeToggle('drag-toggle',        onDragMode)
   const labelsToggle      = makeToggle('labels-toggle',      onLabels)
   const bordersToggle     = makeToggle('borders-toggle',     onBorders)
   const transparentToggle = makeToggle('transparent-toggle', onOpacity)
   const equatorToggle     = makeToggle('equator-toggle',     onEquator)
   const capitalsToggle    = makeToggle('capitals-toggle',    onCapitals)
+  const sunToggle         = makeToggle('sun-toggle',         onSun)
   const weatherToggle     = makeToggle('weather-toggle',     onWeatherClick)
 
   document.getElementById('compass')?.addEventListener('click', onReset)
@@ -24,5 +25,6 @@ export function initControls({ onOpacity, onBorders, onLabels, onDragMode, onEqu
   onOpacity(transparentToggle.classList.contains('active'))
   onEquator(equatorToggle.classList.contains('active'))
   onCapitals(capitalsToggle.classList.contains('active'))
+  onSun(sunToggle.classList.contains('active'))
   onWeatherClick(weatherToggle.classList.contains('active'))
 }

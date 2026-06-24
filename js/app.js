@@ -1,4 +1,4 @@
-import { initScene, startLoop, resetCamera, getCompassAngle, getCamera, getControls, getCanvas } from './globe.js'
+import { initScene, startLoop, resetCamera, getCompassAngle, getCamera, getControls, getCanvas, setSunEnabled } from './globe.js'
 import { initTerrain, setSeaLevel, setOpacity } from './terrain.js'
 import { setGravity, setWindDirection } from './particles.js'
 import { initControls } from './controls.js'
@@ -32,6 +32,7 @@ initBorders(scene)
     onDragMode: setDragMode,
     onEquator: setEquatorVisible,
     onCapitals: setCapitalsVisible,
+    onSun: setSunEnabled,
     onWeatherClick: setWeatherClickEnabled,
     onReset: resetCamera,
   })
