@@ -66,9 +66,17 @@ body {
 }
 
 /* ── Floating toggles ── */
-.float-toggle {
+#toggle-stack {
   position: absolute;
   bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.float-toggle {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -89,12 +97,6 @@ body {
   border-color: rgba(88,166,255,0.6);
   color: #c9d1d9;
 }
-
-#transparent-toggle { right: 24px; }
-#borders-toggle     { right: 176px; }
-#clouds-toggle      { right: 328px; }
-#labels-toggle      { right: 480px; }
-#drag-toggle        { right: 632px; }
 
 .toggle-track {
   width: 38px;

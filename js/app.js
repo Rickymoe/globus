@@ -6,6 +6,7 @@ import { initControls } from './controls.js'
 import { initBorders, setBordersVisible } from './borders.js'
 import { initLabels, setLabelsVisible } from './labels.js'
 import { initDragger, setDragMode } from './dragger.js'
+import { initLatLines, setEquatorVisible } from './latlines.js'
 
 function main() {
   const container = document.getElementById('canvas-container')
@@ -16,6 +17,7 @@ function main() {
   initBorders(scene)
   initLabels(scene)
   initDragger(scene, getCamera(), getControls(), getCanvas())
+  initLatLines(scene)
 
   const needle = document.getElementById('compass-needle')
 
@@ -29,6 +31,7 @@ function main() {
     onBorders: setBordersVisible,
     onLabels: setLabelsVisible,
     onDragMode: setDragMode,
+    onEquator: setEquatorVisible,
     onReset: resetCamera,
   })
 
