@@ -1,4 +1,4 @@
-import { initScene, startLoop, resetCamera, getCompassAngle, getCamera, getControls, getCanvas, setSunEnabled, setMoonTempEnabled } from './globe.js'
+import { initScene, startLoop, resetCamera, getCompassAngle, getCamera, getControls, getCanvas, setSunEnabled, setMoonTempEnabled, setMoonOpacity } from './globe.js'
 import { initTerrain, setSeaLevel, setOpacity } from './terrain.js'
 import { setGravity, setWindDirection } from './particles.js'
 import { initControls } from './controls.js'
@@ -28,7 +28,7 @@ initBorders(scene)
   const needle = document.getElementById('compass-needle')
 
   initControls({
-    onOpacity: setOpacity,
+    onOpacity: v => { setOpacity(v); setMoonOpacity(v) },
     onBorders: setBordersVisible,
     onLabels: setLabelsVisible,
     onDragMode: setDragMode,

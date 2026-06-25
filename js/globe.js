@@ -163,6 +163,13 @@ export function setMoonTempEnabled(enabled) {
   _moonTipEnabled = enabled
 }
 
+export function setMoonOpacity(transparent) {
+  if (!_moon) return
+  _moon.material.transparent = transparent
+  _moon.material.opacity = transparent ? 0.45 : 1.0
+  _moon.material.needsUpdate = true
+}
+
 export function setSunEnabled(enabled) {
   if (!_sunLight) return
   if (enabled) {
