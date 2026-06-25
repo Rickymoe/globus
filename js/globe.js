@@ -112,6 +112,7 @@ export function initScene(container) {
     size: 5, color: 0xFFD700, sizeAttenuation: true, depthWrite: false,
   }))
   _apolloMarker.renderOrder = 2
+  _apolloMarker.visible = false
   _scene.add(_apolloMarker)
 
   _initMoonTooltip(container)
@@ -182,6 +183,10 @@ function _initMoonTooltip(container) {
 
 export function setMoonTempEnabled(enabled) {
   _moonTipEnabled = enabled
+}
+
+export function setApolloVisible(visible) {
+  if (_apolloMarker) _apolloMarker.visible = visible
 }
 
 export function setMoonOpacity(transparent) {

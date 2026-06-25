@@ -1,4 +1,4 @@
-import { initScene, startLoop, resetCamera, getCompassAngle, getCamera, getControls, getCanvas, setSunEnabled, setMoonTempEnabled, setMoonOpacity } from './globe.js'
+import { initScene, startLoop, resetCamera, getCompassAngle, getCamera, getControls, getCanvas, setSunEnabled, setMoonTempEnabled, setMoonOpacity, setApolloVisible } from './globe.js'
 import { initTerrain, setSeaLevel, setOpacity } from './terrain.js'
 import { setGravity, setWindDirection } from './particles.js'
 import { initControls } from './controls.js'
@@ -33,7 +33,7 @@ initBorders(scene)
     onLabels: setLabelsVisible,
     onDragMode: setDragMode,
     onEquator: setEquatorVisible,
-    onCapitals: setCapitalsVisible,
+    onCapitals: v => { setCapitalsVisible(v); setApolloVisible(v) },
     onSolarSystem: setSolarSystemVisible,
     onSun: setSunEnabled,
     onWeatherClick: v => { setWeatherClickEnabled(v); setMoonTempEnabled(v) },
