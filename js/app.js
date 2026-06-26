@@ -1,4 +1,4 @@
-import { initScene, startLoop, resetCamera, getCompassAngle, getCamera, getControls, getCanvas, setSunEnabled, setMoonTempEnabled, setMoonOpacity, setApolloVisible } from './globe.js'
+import { initScene, startLoop, resetCamera, getCompassAngle, getCamera, getControls, getCanvas, setSunEnabled, setMoonTempEnabled, setMoonOpacity, setApolloVisible, getSunDirection } from './globe.js'
 import { initAtmosphere } from './atmosphere.js'
 import { initTerrain, setSeaLevel, setOpacity } from './terrain.js'
 import { setGravity, setWindDirection } from './particles.js'
@@ -8,7 +8,7 @@ import { initUsStates } from './us-states.js'
 import { initEarthquakes, setEarthquakesVisible, updateEarthquakes } from './earthquakes.js'
 import { initIss, setIssVisible } from './iss.js'
 import { initTectonic, setTectonicVisible } from './tectonic.js'
-import { initCityLights, setCityLightsVisible } from './citylights.js'
+import { initCityLights, setCityLightsVisible, updateCityLights } from './citylights.js'
 import { initLabels, setLabelsVisible } from './labels.js'
 import { initDragger, setDragMode } from './dragger.js'
 import { initLatLines, setEquatorVisible } from './latlines.js'
@@ -60,6 +60,7 @@ initBorders(scene)
     needle.style.transform = `rotate(${getCompassAngle()}deg)`
     updatePlanetScales(getCamera())
     updateEarthquakes(delta)
+    updateCityLights(getSunDirection())
   })
 }
 

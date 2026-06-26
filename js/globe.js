@@ -208,9 +208,10 @@ export function setSunEnabled(enabled) {
   _ambient.intensity = enabled ? 0.08 : 1.0
 }
 
-export function getCamera()   { return _camera }
-export function getControls() { return _controls }
-export function getCanvas()   { return _renderer.domElement }
+export function getCamera()      { return _camera }
+export function getControls()    { return _controls }
+export function getCanvas()      { return _renderer.domElement }
+export function getSunDirection(){ return _sunLight.position }
 
 export function resetCamera() {
   _resetting = true
