@@ -4,6 +4,7 @@ import { setGravity, setWindDirection } from './particles.js'
 import { initControls } from './controls.js'
 import { initBorders, setBordersVisible } from './borders.js'
 import { initUsStates } from './us-states.js'
+import { initEarthquakes, setEarthquakesVisible, updateEarthquakes } from './earthquakes.js'
 import { initLabels, setLabelsVisible } from './labels.js'
 import { initDragger, setDragMode } from './dragger.js'
 import { initLatLines, setEquatorVisible } from './latlines.js'
@@ -20,6 +21,7 @@ function main() {
   initTerrain(scene)
 initBorders(scene)
   initUsStates(scene)
+  initEarthquakes(scene)
   initLabels(scene)
   initDragger(scene, getCamera(), getControls(), getCanvas())
   initLatLines(scene)
@@ -39,12 +41,14 @@ initBorders(scene)
     onSolarSystem: setSolarSystemVisible,
     onSun: setSunEnabled,
     onWeatherClick: v => { setWeatherClickEnabled(v); setMoonTempEnabled(v) },
+    onEarthquakes: setEarthquakesVisible,
     onReset: resetCamera,
   })
 
-  startLoop(() => {
+  startLoop(delta => {
     needle.style.transform = `rotate(${getCompassAngle()}deg)`
     updatePlanetScales(getCamera())
+    updateEarthquakes(delta)
   })
 }
 
