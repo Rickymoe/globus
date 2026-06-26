@@ -38,6 +38,7 @@ export function initCityLights(scene) {
     fragmentShader,
     transparent: true,
     depthWrite: false,
+    depthTest: false,
     blending: THREE.AdditiveBlending,
   })
   _mesh = new THREE.Mesh(geo, mat)
