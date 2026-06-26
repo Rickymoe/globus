@@ -14,6 +14,7 @@ export function initCityLights(scene) {
   })
   _mesh = new THREE.Mesh(geo, mat)
   _mesh.visible = false
+  _mesh.renderOrder = 1
   scene.add(_mesh)
 }
 
