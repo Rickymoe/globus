@@ -8,6 +8,7 @@ import { initUsStates } from './us-states.js'
 import { initEarthquakes, setEarthquakesVisible, updateEarthquakes } from './earthquakes.js'
 import { initIss, setIssVisible } from './iss.js'
 import { initTectonic, setTectonicVisible } from './tectonic.js'
+import { initCityLights, setCityLightsVisible } from './citylights.js'
 import { initLabels, setLabelsVisible } from './labels.js'
 import { initDragger, setDragMode } from './dragger.js'
 import { initLatLines, setEquatorVisible } from './latlines.js'
@@ -28,6 +29,7 @@ initBorders(scene)
   initEarthquakes(scene)
   initIss(scene)
   initTectonic(scene)
+  initCityLights(scene)
   initLabels(scene)
   initDragger(scene, getCamera(), getControls(), getCanvas())
   initLatLines(scene)
@@ -46,6 +48,7 @@ initBorders(scene)
     onCapitals: v => { setCapitalsVisible(v); setApolloVisible(v) },
     onSolarSystem: setSolarSystemVisible,
     onSun: setSunEnabled,
+    onCityLights: setCityLightsVisible,
     onWeatherClick: v => { setWeatherClickEnabled(v); setMoonTempEnabled(v) },
     onEarthquakes: setEarthquakesVisible,
     onIss: setIssVisible,
