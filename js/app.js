@@ -4,7 +4,7 @@ import { initTerrain, setSeaLevel, setOpacity } from './terrain.js'
 import { setGravity, setWindDirection } from './particles.js'
 import { initControls } from './controls.js'
 import { initBorders, setBordersVisible } from './borders.js'
-import { initUsStates } from './us-states.js'
+import { initUsStates, setUsStatesVisible } from './us-states.js'
 import { initEarthquakes, setEarthquakesVisible, updateEarthquakes } from './earthquakes.js'
 import { initIss, setIssVisible } from './iss.js'
 import { initTectonic, setTectonicVisible } from './tectonic.js'
@@ -45,7 +45,7 @@ initBorders(scene)
 
   initControls({
     onOpacity: v => { setOpacity(v); setMoonOpacity(v) },
-    onBorders: setBordersVisible,
+    onBorders: v => { setBordersVisible(v); setUsStatesVisible(v) },
     onLabels: setLabelsVisible,
     onDragMode: setDragMode,
     onEquator: setEquatorVisible,
