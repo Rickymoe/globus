@@ -14,7 +14,7 @@ For hvert issue:
 4. Commit og push:
    ```
    git add <filer>
-   git commit -m "feat: <beskrivelse> (closes #<nr>)"
+   git commit -m "feat: <beskrivelse> (refs #<nr>)"
    git push
    ```
 5. Oppdater issue:
@@ -33,7 +33,8 @@ gh issue list --repo Rickymoe/globus --label "@claude-verify" --json number,titl
 
 For hvert issue:
 1. `git pull` — hent siste endringer
-2. Åpne appen og verifiser at funksjonen fungerer som beskrevet i issue
+2. Start lokal server: npx serve /home/ricky/Dokumenter/Koding/globus -p 3000 &
+   Åpne http://localhost:3000 i browser og verifiser at funksjonen fungerer som beskrevet i issue
 3. **Bestått:**
    ```
    gh issue close <nr> --repo Rickymoe/globus \

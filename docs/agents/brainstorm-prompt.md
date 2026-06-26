@@ -60,7 +60,7 @@ gh issue create --repo <repo> \
 Kommenter på original issue med lenke til spec og sub-issues:
 ```
 gh issue comment <nr> --repo <repo> \
-  --body "Brainstorm ferdig.\n\nSpec: docs/superpowers/specs/<fil>\n\nSub-issues: #<nr1>, #<nr2>"
+  --body $'Brainstorm ferdig.\n\nSpec: docs/superpowers/specs/<fil>\n\nSub-issues: #<nr1>, #<nr2>'
 ```
 
 Fjern `@claude-brainstorm`-label:
