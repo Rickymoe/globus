@@ -1,4 +1,5 @@
 import { initScene, startLoop, resetCamera, getCompassAngle, getCamera, getControls, getCanvas, setSunEnabled, setMoonTempEnabled, setMoonOpacity, setApolloVisible } from './globe.js'
+import { initAtmosphere } from './atmosphere.js'
 import { initTerrain, setSeaLevel, setOpacity } from './terrain.js'
 import { setGravity, setWindDirection } from './particles.js'
 import { initControls } from './controls.js'
@@ -18,6 +19,7 @@ function main() {
   const { scene } = initScene(container)
 
   initStars(scene)
+  initAtmosphere(scene)
   initTerrain(scene)
 initBorders(scene)
   initUsStates(scene)
