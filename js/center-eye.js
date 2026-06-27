@@ -1,6 +1,7 @@
 import { setCenterEyeMode } from './terrain.js'
 import { setBordersCenterEye } from './borders.js'
 import { setInsideGlobe } from './globe.js'
+import { setLabelsCenterEye } from './labels.js'
 
 const SURFACE = 99.5
 
@@ -21,6 +22,7 @@ export function updateCenterEye() {
   setCenterEyeMode(_inside)
   setBordersCenterEye(_inside)
   setInsideGlobe(_inside)
+  setLabelsCenterEye(_inside)
   _controls.rotateSpeed = _inside ? -1 : 1
   _controls.zoomSpeed   = _inside ? 5  : 1
 }

@@ -147,3 +147,9 @@ export async function initLabels(scene) {
 export function setLabelsVisible(visible) {
   if (_group) _group.visible = visible
 }
+
+export function setLabelsCenterEye(inside) {
+  if (!_group) return
+  const s = inside ? 97 / 103 : 1
+  _group.scale.setScalar(s)
+}
