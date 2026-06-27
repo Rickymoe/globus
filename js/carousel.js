@@ -41,26 +41,39 @@ export function initCarousel() {
       applyOffset(_offset + (e.deltaY > 0 ? 1 : -1))
     }, { passive: false })
 
-  // Touch swipe
+  // Touch swipe — fungerer selv om fingeren starter på en toggle
   const vp = document.getElementById('carousel-viewport')
-  let _dragY = null
-  let _dragOffset = null
+  let _startY = null
+  let _startOffset = null
+  let _moved = false
 
   vp.addEventListener('pointerdown', e => {
-    if (e.target.closest('.float-toggle')) return
-    _dragY = e.clientY
-    _dragOffset = _offset
+    _startY = e.clientY
+    _startOffset = _offset
+    _moved = false
     vp.setPointerCapture(e.pointerId)
   })
 
-  vp.addEventListener('pointerup', e => {
-    if (_dragY === null) return
-    const steps = Math.round((_dragY - e.clientY) / getPillH())
-    if (steps !== 0) applyOffset(_dragOffset + steps)
-    _dragY = null
+  vp.addEventListener('pointermove', e => {
+    if (_startY === null) return
+    if (Math.abs(e.clientY - _startY) > 8) _moved = true
   })
 
-  vp.addEventListener('pointercancel', () => { _dragY = null })
+  vp.addEventListener('pointerup', e => {
+    if (_startY === null) return
+    if (_moved) {
+      const steps = Math.round((_startY - e.clientY) / getPillH())
+      applyOffset(_startOffset + steps)
+    }
+    _startY = null
+  })
+
+  vp.addEventListener('pointercancel', () => { _startY = null; _moved = false })
+
+  // Hindre at en swipe-bevegelse også aktiverer en toggle
+  vp.addEventListener('click', e => {
+    if (_moved) { e.stopPropagation(); _moved = false }
+  }, true)
 
   window.addEventListener('resize', () => {
     _pillH = null
