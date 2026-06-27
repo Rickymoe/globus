@@ -13,7 +13,7 @@ const PLANETS = [
   { name: 'Neptun',  r:  390,  color: 0x4060ff },
 ]
 
-let _scene, _camera, _controls
+let _camera, _controls
 let _compareGroup = null
 let _panel = null
 let _backBtn = null
@@ -24,7 +24,6 @@ let _savedMinDist = 0
 let _savedMaxDist = 0
 
 export function initPlanetCompare(scene, camera, controls) {
-  _scene = scene
   _camera = camera
   _controls = controls
 
@@ -139,11 +138,13 @@ export function enterPlanetCompare(planetName) {
   const planetMesh = _compareGroup.children.find(c => c.userData.planetName === planetName)
   planetMesh.position.set(0, 0, planetZ)
 
-  // Lagre eksisterende kamera/controls-tilstand
-  _savedCamPos = _camera.position.clone()
-  _savedTarget = _controls.target.clone()
-  _savedMinDist = _controls.minDistance
-  _savedMaxDist = _controls.maxDistance
+  // Lagre eksisterende kamera/controls-tilstand (kun ved første aktivering)
+  if (!_active) {
+    _savedCamPos = _camera.position.clone()
+    _savedTarget = _controls.target.clone()
+    _savedMinDist = _controls.minDistance
+    _savedMaxDist = _controls.maxDistance
+  }
 
   // Sett kamera tett på Jorda, orbit rundt planetsentrum
   const target = new THREE.Vector3(0, 0, planetZ)
