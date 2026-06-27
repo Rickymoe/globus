@@ -16,6 +16,7 @@ import { initLatLines, setEquatorVisible } from './latlines.js'
 import { initCapitals, setCapitalsVisible } from './capitals.js'
 import { initWeatherClick, setWeatherClickEnabled } from './yr-weather.js'
 import { initCountryInfo, setCountryInfoEnabled } from './countryinfo.js'
+import { initCarousel } from './carousel.js'
 import { initStars } from './stars.js'
 import { initSolarSystem, setSolarSystemVisible, updatePlanetScales } from './solar-system.js'
 
@@ -43,6 +44,7 @@ initBorders(scene)
 
   const needle = document.getElementById('compass-needle')
 
+  initCarousel()
   initControls({
     onOpacity: v => { setOpacity(v); setMoonOpacity(v) },
     onBorders: v => { setBordersVisible(v); setUsStatesVisible(v) },

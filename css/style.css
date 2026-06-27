@@ -65,16 +65,57 @@ body {
   pointer-events: none;
 }
 
-/* ── Floating toggles ── */
-#toggle-stack {
+/* ── Carousel wrapper ── */
+#carousel-wrap {
   position: absolute;
   bottom: 24px;
   right: 24px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
   align-items: stretch;
+  gap: 8px;
+  max-height: calc(100vh - 48px);
 }
+
+#carousel-viewport {
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 22px;
+  padding: 6px;
+}
+
+/* ── Floating toggles ── */
+#toggle-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.3s ease;
+}
+
+.carousel-btn {
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  color: #e0e0e0;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.2s, border-color 0.2s;
+  user-select: none;
+  padding: 0;
+}
+
+.carousel-btn:hover:not(:disabled) { border-color: rgba(255,255,255,0.55); }
+.carousel-btn:disabled { opacity: 0.2; cursor: default; }
 
 .float-toggle {
   display: flex;
