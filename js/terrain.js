@@ -1,14 +1,12 @@
 import * as THREE from 'three'
 
-const BASE = 'https://threejs.org/examples/textures/planets/'
-
 let _terrainMesh, _backMesh, _waterMesh, _atmSprite
 
 export function initTerrain(scene) {
   const loader = new THREE.TextureLoader()
 
-  const colorMap  = loader.load(BASE + 'earth_atmos_2048.jpg')
-  const normalMap = loader.load(BASE + 'earth_normal_2048.jpg')
+  const colorMap  = loader.load('textures/earth/daymap_5400.jpg')
+  const normalMap = loader.load('textures/earth/normal_2048.jpg')
 
   const geo = new THREE.SphereGeometry(100, 64, 64)
 
