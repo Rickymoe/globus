@@ -126,7 +126,7 @@ function buildParticles(scene) {
     fragmentShader,
     transparent: true,
     depthWrite: false,
-    depthTest: false,
+    depthTest: true,
     blending: THREE.AdditiveBlending,
   })
 
