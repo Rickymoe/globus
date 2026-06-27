@@ -26,8 +26,8 @@ const haloFragmentShader = `
   varying vec3 vViewDir;
   void main() {
     float rim  = 1.0 - abs(dot(vNormal, vViewDir));
-    float halo = pow(rim, 6.0);
-    gl_FragColor = vec4(0.2, 0.5, 1.0, halo * 0.25);
+    float halo = pow(rim, 3.0);
+    gl_FragColor = vec4(0.15, 0.45, 1.0, halo * 0.15);
   }
 `
 
@@ -48,7 +48,7 @@ export function initAtmosphere(scene) {
   scene.add(_mesh)
 
   // Ytre halo for myk fade mot verdensrommet
-  const haloGeo = new THREE.SphereGeometry(135, 64, 64)
+  const haloGeo = new THREE.SphereGeometry(165, 64, 64)
   const haloMat = new THREE.ShaderMaterial({
     vertexShader,
     haloFragmentShader,
