@@ -121,6 +121,7 @@ function buildParticles(scene) {
 
   _points = new THREE.Points(geo, mat)
   _points.renderOrder = 4
+  _points.frustumCulled = false
   _points.visible = _visible
   scene.add(_points)
 }
