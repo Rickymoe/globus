@@ -32,6 +32,8 @@ vec3 hsl2rgb(float h, float s, float l) {
 
 void main() {
   vec3 n = normalize(vWorldPos);
+  float lat = asin(clamp(n.y, -1.0, 1.0));
+  if (abs(lat) > 1.5184) discard;  // 87° i radianer — pol er tomt
   float lon = atan(n.z, n.x);
   float zone = floor(lon / (3.14159265 / 12.0) + 0.5);
   zone = clamp(zone, -12.0, 11.0);
