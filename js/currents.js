@@ -16,11 +16,13 @@ const CURRENTS = [
   { name: 'Kuroshio', type: 'warm', speed: 0.88,
     path: [[20,130],[25,133],[30,137],[35,141],[40,148],[45,158]] },
   { name: 'North Pacific Current', type: 'warm', speed: 0.45,
-    path: [[45,158],[45,172],[44,-178],[44,-162],[43,-148],[42,-135]] },
+    // Eastward — extend past +180 to avoid Catmull-Rom cutting over Asia
+    path: [[45,158],[45,172],[45,182],[45,198],[44,212],[43,225]] },
   { name: 'California Current', type: 'cold', speed: 0.42,
     path: [[55,-132],[50,-130],[45,-127],[38,-124],[30,-118],[22,-110]] },
   { name: 'North Equatorial (Pacific)', type: 'warm', speed: 0.55,
-    path: [[15,-118],[15,-140],[15,-165],[15,178],[15,155],[15,130]] },
+    // Westward — extend past -180 to avoid Catmull-Rom cutting over Africa
+    path: [[15,-118],[15,-140],[15,-165],[15,-182],[15,-205],[15,-230]] },
   { name: 'Humboldt Current', type: 'cold', speed: 0.5,
     path: [[-40,-75],[-30,-78],[-20,-80],[-10,-82],[0,-84]] },
   // Brazil Current — follows coastline, stays ~3–5° offshore
@@ -34,8 +36,9 @@ const CURRENTS = [
   { name: 'East Australian Current', type: 'warm', speed: 0.62,
     path: [[-15,155],[-22,154],[-28,154],[-33,153],[-38,151],[-42,149]] },
   { name: 'Antarctic Circumpolar', type: 'cold', speed: 0.38,
+    // Monotonically increasing longitude (300 = -60°W) — no antimeridian jump
     path: [[-55,-60],[-55,-30],[-55,0],[-55,30],[-55,60],
-           [-55,90],[-55,120],[-55,150],[-55,178],[-55,-150],[-55,-120],[-55,-90],[-55,-60]] },
+           [-55,90],[-55,120],[-55,150],[-55,178],[-55,210],[-55,240],[-55,270],[-55,300]] },
   { name: 'Somali Current', type: 'warm', speed: 0.62,
     path: [[-2,42],[5,46],[10,51],[14,54]] },
   { name: 'Indian South Equatorial', type: 'warm', speed: 0.5,
@@ -176,12 +179,12 @@ export function initCurrents(scene, camera, canvas) {
 
   for (let c = 0; c < CURRENTS.length; c++) {
     const cur  = CURRENTS[c]
-    const loop = cur.name === 'Antarctic Circumpolar'
+    const loop = false   // all paths use extended longitudes — no antimeridian jumps
     const base = cur.type === 'warm' ? WARM_COL : COLD_COL
     for (let p = 0; p < PER; p++) {
       const idx = c * PER + p
       _particles.push({
-        c, loop,
+        c,
         t:     p / PER,
         speed: cur.speed * (0.82 + Math.random() * 0.36),
         phase: Math.random() * Math.PI * 2,
@@ -216,7 +219,7 @@ function _tick(delta) {
     p.t = (p.t + p.speed * SPEED_SCALE * delta) % 1
 
     const cur = CURRENTS[p.c]
-    const [lat, lon] = samplePath(cur.path, p.t, p.loop)
+    const [lat, lon] = samplePath(cur.path, p.t, false)
 
     const wander       = Math.sin(_time * 0.25 + p.phase) * 0.25
     const [dlat, dlon] = perpAt(cur.path, p.t)
