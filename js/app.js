@@ -25,6 +25,7 @@ import { initStars } from './stars.js'
 import { initSolarSystem, setSolarSystemVisible, updatePlanetScales } from './solar-system.js'
 import { initPlanetCompare, showPlanetPanel, exitPlanetCompare } from './planet-compare.js'
 import { initEonet, setEonetVisible, updateEonet } from './eonet.js'
+import { initApiStatus } from './api-status.js'
 
 function main() {
   const container = document.getElementById('canvas-container')
@@ -50,6 +51,7 @@ initBorders(scene)
   initCountryInfo(getCamera(), getCanvas())
   initCenterEye(getCamera(), getControls())
   initDonki().then(() => setAuroraActivity(getAuroraActivity()))
+  initApiStatus()
   initSolarSystem(scene)
   initPlanetCompare(scene, getCamera(), getControls())
   initEonet(scene, getCamera(), getCanvas())
