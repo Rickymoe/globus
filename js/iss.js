@@ -170,7 +170,7 @@ function buildTrack(points) {
     vertexColors: true,
     transparent: true,
     opacity: 0.65,
-    depthTest: false,
+    depthTest: true,
   }))
   _trackLine.renderOrder = 9
   _group.add(_trackLine)
@@ -219,7 +219,7 @@ export async function initIss(scene, camera, canvas) {
   const mat = new THREE.SpriteMaterial({
     map: makeIssTex(),
     transparent: true,
-    depthTest: false,
+    depthTest: true,
     opacity: 1,
   })
   _sprite = new THREE.Sprite(mat)
