@@ -6,7 +6,7 @@ import { initControls } from './controls.js'
 import { initBorders, setBordersVisible } from './borders.js'
 import { initAdmin1, setAdmin1Visible } from './admin1.js'
 import { initEarthquakes, setEarthquakesVisible, updateEarthquakes } from './earthquakes.js'
-import { initIss, setIssVisible } from './iss.js'
+import { initIss, setIssVisible, updateIss } from './iss.js'
 import { initTectonic, setTectonicVisible } from './tectonic.js'
 import { initCityLights, setCityLightsVisible, updateCityLights } from './citylights.js'
 import { initAurora, setAuroraVisible, updateAurora, setAuroraActivity } from './aurora.js'
@@ -41,7 +41,7 @@ function main() {
 initBorders(scene)
   initAdmin1(scene)
   initEarthquakes(scene, getCamera(), getCanvas())
-  initIss(scene)
+  initIss(scene, getCamera(), getCanvas())
   initTectonic(scene)
   initCityLights(scene)
   initAurora(scene)
@@ -106,6 +106,7 @@ initBorders(scene)
     updateMagnetField(delta)
     updateEonet(delta)
     updateSatellites(delta)
+    updateIss(delta)
     updateCurrents(delta)
     updateShips(delta)
     updateOceanLabels(getCamera())

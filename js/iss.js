@@ -1,72 +1,189 @@
 import * as THREE from 'three'
 
-const R_ISS = 106.4
+const R_ISS = 106.5
 
-let _group = null
-let _coreDot = null
-let _glowDot = null
+let _group   = null
+let _sprite  = null
+let _orbit   = null   // ground track line
+let _tooltip = null
+let _camera  = null
+let _canvas  = null
+let _lat = 0, _lon = 0
+let _info    = null   // { altitude, velocity, lat, lon }
+let _time    = 0
 
-function latLonToVec3(lat, lon) {
+function latLonToVec3(lat, lon, r = R_ISS) {
   const phi   = (90 - lat) * Math.PI / 180
   const theta = (lon + 180) * Math.PI / 180
   return new THREE.Vector3(
-    -R_ISS * Math.cos(theta) * Math.sin(phi),
-     R_ISS * Math.cos(phi),
-     R_ISS * Math.sin(theta) * Math.sin(phi),
+    -r * Math.cos(theta) * Math.sin(phi),
+     r * Math.cos(phi),
+     r * Math.sin(theta) * Math.sin(phi),
   )
 }
 
-function updateIssPosition(lat, lon) {
-  const v = latLonToVec3(lat, lon)
-  const pos = new Float32Array([v.x, v.y, v.z])
-  if (_coreDot) _coreDot.geometry.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
-  if (_glowDot) _glowDot.geometry.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
+// ── ISS sprite texture ────────────────────────────────────────────────────────
+
+function makeIssTex() {
+  const S   = 96
+  const cx  = S / 2, cy = S / 2
+  const c   = document.createElement('canvas')
+  c.width = c.height = S
+  const ctx = c.getContext('2d')
+
+  // Outer glow
+  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 30)
+  g.addColorStop(0,   'rgba(160,210,255,0.55)')
+  g.addColorStop(0.5, 'rgba(100,170,255,0.20)')
+  g.addColorStop(1,   'rgba(80,140,255,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, S, S)
+
+  // Solar panel helper
+  const panel = (x, y, w, h) => {
+    ctx.fillStyle = '#5599ee'
+    ctx.fillRect(x, y, w, h)
+    // panel grid lines
+    ctx.strokeStyle = 'rgba(180,220,255,0.5)'
+    ctx.lineWidth = 0.5
+    ctx.beginPath()
+    ctx.moveTo(x + w/2, y); ctx.lineTo(x + w/2, y + h)
+    ctx.moveTo(x, y + h/2); ctx.lineTo(x + w, y + h/2)
+    ctx.stroke()
+  }
+
+  // Main truss (horizontal bar)
+  ctx.fillStyle = '#ddeeff'
+  ctx.fillRect(cx - 26, cy - 2.5, 52, 5)
+
+  // Solar panels — 2 pairs each side
+  panel(cx - 38, cy - 12, 14, 9)   // left upper
+  panel(cx - 38, cy + 3,  14, 9)   // left lower
+  panel(cx + 24, cy - 12, 14, 9)   // right upper
+  panel(cx + 24, cy + 3,  14, 9)   // right lower
+
+  // Habitation module stack (vertical)
+  ctx.fillStyle = '#eef4ff'
+  ctx.fillRect(cx - 4, cy - 10, 8, 20)
+
+  // Node connectors
+  ctx.fillStyle = '#cce0ff'
+  ctx.fillRect(cx - 7, cy - 3, 14, 6)
+
+  // Bright core
+  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, 4)
+  core.addColorStop(0, '#ffffff')
+  core.addColorStop(1, 'rgba(200,230,255,0)')
+  ctx.fillStyle = core
+  ctx.beginPath()
+  ctx.arc(cx, cy, 4, 0, Math.PI * 2)
+  ctx.fill()
+
+  return new THREE.CanvasTexture(c)
 }
 
+// ── Tooltip ───────────────────────────────────────────────────────────────────
+
+function _buildTooltip(container) {
+  _tooltip = document.createElement('div')
+  _tooltip.style.cssText = [
+    'position:absolute','background:rgba(8,8,8,0.88)','color:#e0e0e0',
+    'border:1px solid rgba(255,255,255,0.15)','border-radius:8px',
+    'padding:7px 11px','font-size:12px','font-family:system-ui,sans-serif',
+    'pointer-events:none','display:none','z-index:50','white-space:nowrap',
+    'backdrop-filter:blur(4px)',
+  ].join(';')
+  container.appendChild(_tooltip)
+}
+
+function _projectISS() {
+  if (!_sprite || !_camera || !_canvas) return null
+  const rect = _canvas.getBoundingClientRect()
+  const sc   = _sprite.position.clone().project(_camera)
+  return {
+    x: ( sc.x + 1) / 2 * rect.width,
+    y: (-sc.y + 1) / 2 * rect.height,
+  }
+}
+
+function onMouseMove(e) {
+  if (!_group?.visible || !_info) return
+  const rect = _canvas.getBoundingClientRect()
+  const sp   = _projectISS()
+  if (!sp) return
+  const d = Math.hypot(e.clientX - rect.left - sp.x, e.clientY - rect.top - sp.y)
+  if (d < 36) {
+    const alt = _info.altitude?.toFixed(1) ?? '–'
+    const vel = _info.velocity != null ? (_info.velocity / 3.6).toFixed(2) : '–'
+    _tooltip.innerHTML =
+      `🛸 <b>International Space Station</b>` +
+      `<br><span style="color:#aaa;font-size:11px">` +
+      `Alt ${alt} km · ${vel} km/s · ${_lat.toFixed(2)}°, ${_lon.toFixed(2)}°</span>`
+    _tooltip.style.left    = (sp.x + 14) + 'px'
+    _tooltip.style.top     = (sp.y - 10) + 'px'
+    _tooltip.style.display = 'block'
+  } else {
+    _tooltip.style.display = 'none'
+  }
+}
+
+// ── Fetch loop ────────────────────────────────────────────────────────────────
+
 const ISS_URL = 'https://api.wheretheiss.at/v1/satellites/25544'
-let _retryDelay = 10000
+let _retryDelay = 5000
 
 async function fetchAndUpdate() {
   try {
-    const data = await fetch(ISS_URL).then(r => r.json())
-    updateIssPosition(data.latitude, data.longitude)
-    _retryDelay = 10000
+    const d = await fetch(ISS_URL).then(r => r.json())
+    _lat  = d.latitude
+    _lon  = d.longitude
+    _info = d
+    const v = latLonToVec3(_lat, _lon)
+    if (_sprite) _sprite.position.copy(v)
+    _retryDelay = 5000
   } catch {
-    _retryDelay = Math.min(_retryDelay * 2, 300000)
+    _retryDelay = Math.min(_retryDelay * 2, 120000)
   }
   setTimeout(fetchAndUpdate, _retryDelay)
 }
 
-export async function initIss(scene) {
+// ── Public API ────────────────────────────────────────────────────────────────
+
+export async function initIss(scene, camera, canvas) {
+  _camera = camera
+  _canvas = canvas
+
   _group = new THREE.Group()
   _group.visible = false
   scene.add(_group)
 
-  const geo1 = new THREE.BufferGeometry()
-  geo1.setAttribute('position', new THREE.Float32BufferAttribute([0, R_ISS, 0], 3))
-  _coreDot = new THREE.Points(geo1, new THREE.PointsMaterial({
-    color: 0xffffff,
-    size: 8,
-    sizeAttenuation: true,
-    depthTest: false,
-  }))
-  _group.add(_coreDot)
-
-  const geo2 = new THREE.BufferGeometry()
-  geo2.setAttribute('position', new THREE.Float32BufferAttribute([0, R_ISS, 0], 3))
-  _glowDot = new THREE.Points(geo2, new THREE.PointsMaterial({
-    color: 0x88ccff,
-    size: 16,
-    sizeAttenuation: true,
+  const mat = new THREE.SpriteMaterial({
+    map: makeIssTex(),
     transparent: true,
-    opacity: 0.4,
     depthTest: false,
-  }))
-  _group.add(_glowDot)
+    opacity: 1,
+  })
+  _sprite = new THREE.Sprite(mat)
+  _sprite.scale.set(8, 8, 1)
+  _sprite.renderOrder = 10
+  _sprite.position.set(0, R_ISS, 0)
+  _group.add(_sprite)
+
+  const container = document.getElementById('canvas-container')
+  _buildTooltip(container)
+  canvas.addEventListener('mousemove', onMouseMove)
 
   fetchAndUpdate()
 }
 
+export function updateIss(delta) {
+  if (!_group?.visible || !_sprite) return
+  _time += delta
+  // Gentle pulse on the opacity
+  _sprite.material.opacity = 0.85 + 0.15 * Math.sin(_time * 2.5)
+}
+
 export function setIssVisible(visible) {
   if (_group) _group.visible = visible
+  if (!visible && _tooltip) _tooltip.style.display = 'none'
 }
