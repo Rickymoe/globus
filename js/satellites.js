@@ -279,4 +279,5 @@ export function updateSatellites(delta) {
   if (!_group?.visible) return
   _timer += delta
   if (_timer >= UPDATE_S) { _timer = 0; recompute() }
+  else _projectToScreen()  // keep hover coords in sync with camera every frame
 }
