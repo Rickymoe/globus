@@ -10,17 +10,22 @@ const R_EARTH   = 6371   // km
 const R_GLOBE   = 100    // Three.js units
 const UPDATE_S  = 30     // recompute positions every 30 s
 
-let _group        = null
-let _pointsOther  = null
-let _pointsStarl  = null
-let _satOther     = []
-let _satStarl     = []
-let _hover      = []
-let _tooltip    = null
-let _statsPanel = null
-let _camera   = null
-let _canvas   = null
-let _timer    = 0
+let _group       = null
+let _pointsStarl = null
+let _pointsLEO   = null
+let _pointsMEO   = null
+let _pointsGEO   = null
+let _satStarl    = []
+let _satLEO      = []
+let _satMEO      = []
+let _satGEO      = []
+let _filter      = { starlink: true, leo: true, meo: true, geo: true }
+let _hover       = []
+let _tooltip     = null
+let _statsPanel  = null
+let _camera      = null
+let _canvas      = null
+let _timer       = 0
 
 // ── TLE parsing (from JSON API or raw text) ──────────────────────────────────
 
@@ -141,6 +146,11 @@ function altColor(nRevDay, name) {
   return [1.0, 0.85, 0.0]                                   // GEO — gold
 }
 
+function satAlt(s) {
+  const n = s.nRevDay * 2 * Math.PI / 86400
+  return Math.cbrt(398600.4418 / (n * n)) - R_EARTH
+}
+
 function _recomputeGroup(data, points) {
   if (!data.length || !points) return
   const now = new Date()
@@ -157,8 +167,10 @@ function _recomputeGroup(data, points) {
 }
 
 function recompute() {
-  _recomputeGroup(_satOther, _pointsOther)
   _recomputeGroup(_satStarl, _pointsStarl)
+  _recomputeGroup(_satLEO,   _pointsLEO)
+  _recomputeGroup(_satMEO,   _pointsMEO)
+  _recomputeGroup(_satGEO,   _pointsGEO)
   _projectToScreen()
 }
 
@@ -183,8 +195,10 @@ function _projectToScreen() {
   _hover = []
   const rect   = _canvas.getBoundingClientRect()
   const camDir = _camera.position.clone().normalize()
-  _projectGroup(_satOther, _pointsOther, rect, camDir)
-  _projectGroup(_satStarl, _pointsStarl, rect, camDir)
+  if (_filter.starlink) _projectGroup(_satStarl, _pointsStarl, rect, camDir)
+  if (_filter.leo)      _projectGroup(_satLEO,   _pointsLEO,   rect, camDir)
+  if (_filter.meo)      _projectGroup(_satMEO,   _pointsMEO,   rect, camDir)
+  if (_filter.geo)      _projectGroup(_satGEO,   _pointsGEO,   rect, camDir)
 }
 
 // ── Tooltip ───────────────────────────────────────────────────────────────────
@@ -209,6 +223,27 @@ function onMouseMove(e) {
   } else {
     _tooltip.style.display = 'none'
   }
+}
+
+// ── Filter ────────────────────────────────────────────────────────────────────
+
+function _setFilter(cat, visible) {
+  _filter[cat] = visible
+  const map = { starlink: _pointsStarl, leo: _pointsLEO, meo: _pointsMEO, geo: _pointsGEO }
+  if (map[cat]) map[cat].visible = visible
+  _projectToScreen()
+}
+
+function _updateFilterButtons() {
+  if (!_statsPanel) return
+  const colors = { starlink: '#ffffff', leo: '#00ccff', meo: '#4dff88', geo: '#ffd966' }
+  _statsPanel.querySelectorAll('button[data-cat]').forEach(btn => {
+    const cat = btn.dataset.cat
+    const on  = _filter[cat]
+    btn.style.opacity    = on ? '1' : '0.3'
+    btn.style.border     = `1px solid ${on ? colors[cat] : 'rgba(255,255,255,0.8)'}`
+    btn.style.color      = on ? colors[cat] : '#888'
+  })
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -242,10 +277,13 @@ export async function initSatellites(scene, camera, canvas) {
   const all   = jsons.flatMap(parseTLE)
   if (!all.length) { console.warn('[satellites] all TLE fetches failed'); return }
 
-  _satOther = all.filter(s => !s.name.startsWith('STARLINK'))
   _satStarl = all.filter(s =>  s.name.startsWith('STARLINK'))
+  const other = all.filter(s => !s.name.startsWith('STARLINK'))
+  _satLEO = other.filter(s => satAlt(s) <= 2000)
+  _satMEO = other.filter(s => satAlt(s) > 2000 && satAlt(s) <= 34000)
+  _satGEO = other.filter(s => satAlt(s) > 34000)
 
-  function makePoints(data) {
+  function makePoints(data, size) {
     const n   = data.length
     const pos = new Float32Array(n * 3)
     const col = new Float32Array(n * 3)
@@ -258,30 +296,34 @@ export async function initSatellites(scene, camera, canvas) {
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
     geo.setAttribute('color',    new THREE.Float32BufferAttribute(col, 3))
     return new THREE.Points(geo, new THREE.PointsMaterial({
-      size: 3, map: _circleTex, alphaTest: 0.5,
+      size, map: _circleTex, alphaTest: 0.5,
       sizeAttenuation: true, vertexColors: true,
     }))
   }
 
-  _pointsOther = makePoints(_satOther)
-  _pointsStarl = makePoints(_satStarl)
-  _group.add(_pointsOther)
+  _pointsStarl = makePoints(_satStarl, 2)
+  _pointsLEO   = makePoints(_satLEO,   2.5)
+  _pointsMEO   = makePoints(_satMEO,   3)
+  _pointsGEO   = makePoints(_satGEO,   3)
   _group.add(_pointsStarl)
+  _group.add(_pointsLEO)
+  _group.add(_pointsMEO)
+  _group.add(_pointsGEO)
 
   _buildStatsPanel(all, jsons[0]?.updated)
   recompute()
 }
 
 function _buildStatsPanel(all, updatedISO) {
-  const satAlt = s => Math.cbrt(398600.4418 / ((s.nRevDay * 2 * Math.PI / 86400) ** 2)) - R_EARTH
-  const starlink = all.filter(s =>  s.name.startsWith('STARLINK')).length
-  const geo      = all.filter(s => !s.name.startsWith('STARLINK') && satAlt(s) > 34000).length
-  const meo      = all.filter(s => !s.name.startsWith('STARLINK') && satAlt(s) > 2000 && satAlt(s) <= 34000).length
-  const leo      = all.filter(s => !s.name.startsWith('STARLINK') && satAlt(s) <= 2000).length
-
   const updated = updatedISO
     ? new Date(updatedISO).toLocaleDateString('nb-NO', { day: 'numeric', month: 'short', year: 'numeric' })
     : '–'
+
+  const btnBase = [
+    'border-radius:20px', 'padding:3px 10px', 'font-size:11px',
+    'background:rgba(255,255,255,0.08)', 'cursor:pointer',
+    'font-family:system-ui,sans-serif', 'transition:opacity 0.15s',
+  ].join(';')
 
   _statsPanel = document.createElement('div')
   _statsPanel.style.cssText = [
@@ -294,16 +336,30 @@ function _buildStatsPanel(all, updatedISO) {
 
   _statsPanel.innerHTML = `
     <div style="display:flex;align-items:baseline;gap:0.6rem">
-      <span style="font-size:18px;font-weight:600">🛰️ ${all.length.toLocaleString('nb-NO')} satelitter</span>
-      <span style="font-size:11px;color:#888">Oppdatert ${updated}</span>
+      <span style="font-size:18px;font-weight:600">🛰️ ${all.length.toLocaleString('nb-NO')} satellites</span>
+      <span style="font-size:11px;color:#888">Updated ${updated}</span>
     </div>
-    <div style="display:flex;gap:1.2rem;font-size:12px">
-      <span><span style="color:#fff;font-size:9px">⬤</span> <b>${starlink.toLocaleString('nb-NO')}</b> Starlink</span>
-      <span><span style="color:#00ccff;font-size:9px">⬤</span> <b>${leo.toLocaleString('nb-NO')}</b> LEO</span>
-      <span><span style="color:#4dff88;font-size:9px">⬤</span> <b>${meo.toLocaleString('nb-NO')}</b> MEO</span>
-      <span><span style="color:#ffd966;font-size:9px">⬤</span> <b>${geo.toLocaleString('nb-NO')}</b> GEO</span>
+    <div style="display:flex;gap:1.2rem;font-size:12px;pointer-events:auto">
+      <span title="Starlink — SpaceX megaconstellation, 550 km altitude"><span style="color:#fff;font-size:9px">⬤</span> <b>${_satStarl.length.toLocaleString('nb-NO')}</b> Starlink</span>
+      <span title="LEO — Low Earth Orbit, below 2 000 km"><span style="color:#00ccff;font-size:9px">⬤</span> <b>${_satLEO.length.toLocaleString('nb-NO')}</b> LEO</span>
+      <span title="MEO — Medium Earth Orbit, 2 000–34 000 km (GPS, Galileo)"><span style="color:#4dff88;font-size:9px">⬤</span> <b>${_satMEO.length.toLocaleString('nb-NO')}</b> MEO</span>
+      <span title="GEO — Geostationary Orbit, 35 786 km (weather, TV)"><span style="color:#ffd966;font-size:9px">⬤</span> <b>${_satGEO.length.toLocaleString('nb-NO')}</b> GEO</span>
+    </div>
+    <div id="sat-filter-btns" style="display:flex;gap:0.4rem;flex-wrap:wrap;pointer-events:auto">
+      <button data-cat="starlink" style="${btnBase};border:1px solid #fff;color:#fff">⬤ Starlink</button>
+      <button data-cat="leo"      style="${btnBase};border:1px solid #00ccff;color:#00ccff">⬤ LEO</button>
+      <button data-cat="meo"      style="${btnBase};border:1px solid #4dff88;color:#4dff88">⬤ MEO</button>
+      <button data-cat="geo"      style="${btnBase};border:1px solid #ffd966;color:#ffd966">⬤ GEO</button>
     </div>
   `
+
+  _statsPanel.querySelector('#sat-filter-btns').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-cat]')
+    if (!btn) return
+    _setFilter(btn.dataset.cat, !_filter[btn.dataset.cat])
+    _updateFilterButtons()
+  })
+
   document.getElementById('panel-stack').appendChild(_statsPanel)
 }
 
