@@ -7,7 +7,7 @@ function makeToggle(id, onChange) {
   return el
 }
 
-export function initControls({ onOpacity, onBorders, onLabels, onDragMode, onEquator, onCapitals, onSolarSystem, onSun, onCityLights, onAurora, onWeatherClick, onEarthquakes, onSatellites, onIss, onTectonic, onCountryInfo, onTimezones, onCurrents, onReset }) {
+export function initControls({ onOpacity, onBorders, onLabels, onDragMode, onEquator, onCapitals, onSolarSystem, onSun, onCityLights, onAurora, onWeatherClick, onEarthquakes, onSatellites, onIss, onTectonic, onCountryInfo, onTimezones, onCurrents, onShips, onReset }) {
   const dragToggle          = makeToggle('drag-toggle',          onDragMode)
   const labelsToggle        = makeToggle('labels-toggle',        onLabels)
   const bordersToggle       = makeToggle('borders-toggle',       onBorders)
@@ -26,6 +26,7 @@ export function initControls({ onOpacity, onBorders, onLabels, onDragMode, onEqu
   const countryInfoToggle   = makeToggle('countryinfo-toggle',   onCountryInfo)
   const timezonesToggle     = makeToggle('timezones-toggle',     onTimezones)
   const currentsToggle      = makeToggle('currents-toggle',      onCurrents)
+  const shipsToggle         = makeToggle('ships-toggle',         onShips)
 
   document.getElementById('compass')?.addEventListener('click', onReset)
 
@@ -47,4 +48,5 @@ export function initControls({ onOpacity, onBorders, onLabels, onDragMode, onEqu
   onCountryInfo(countryInfoToggle.classList.contains('active'))
   onTimezones(timezonesToggle.classList.contains('active'))
   onCurrents(currentsToggle.classList.contains('active'))
+  onShips(shipsToggle.classList.contains('active'))
 }
