@@ -42,7 +42,7 @@ function calcMoonPosition() {
     Math.sin(moonAngle) * MOON_ORBIT,
   )
 }
-const DEFAULT_CAM = new THREE.Vector3(0, 0, 250)
+const DEFAULT_CAM = new THREE.Vector3(0, 0, 280)
 
 export function initScene(container) {
   _scene = new THREE.Scene()
@@ -51,7 +51,7 @@ export function initScene(container) {
   const w = container.clientWidth || window.innerWidth
   const h = container.clientHeight || window.innerHeight
   _camera = new THREE.PerspectiveCamera(45, w / h, 1, 150000)
-  _camera.position.z = 250
+  _camera.position.z = 280
 
   _renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
   _renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
