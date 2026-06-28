@@ -136,12 +136,17 @@ async function fetchCountryInfo(lat, lon, clientX, clientY) {
       ? `${currencies[0].name} (${currencies[0].symbol ?? Object.keys(country.currencies)[0]})`
       : '–'
 
+    // For countries with states/provinces, show the subdivision
+    const subdivision = geo.address?.state ?? geo.address?.province ?? geo.address?.region ?? ''
+    const showSub = subdivision && subdivision !== name
+
     render(`
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <span style="font-size:2em;line-height:1">${flag}</span>
         ${closeBtn()}
       </div>
       <div style="font-size:1.1em;font-weight:600;margin:6px 0 2px">${name}</div>
+      ${showSub ? `<div style="color:#ccc;font-size:12px;margin-bottom:2px">📍 ${subdivision}</div>` : ''}
       <div style="color:#888;font-size:11px;margin-bottom:8px">🏛 ${capital}</div>
       <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:8px">
         ${country?.population ? `<div>👥 ${pop}</div>` : ''}
