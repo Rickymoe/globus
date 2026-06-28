@@ -1,0 +1,32 @@
+name: Update Starlink TLE data
+
+on:
+  schedule:
+    - cron: '0 4 * * *'   # 04:00 UTC daily
+  workflow_dispatch:        # allow manual trigger from GitHub UI
+
+jobs:
+  update-tle:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch all Starlink TLE data
+        run: node scripts/fetch-tle.js
+
+      - name: Commit and push if data changed
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/starlinks.json
+          git diff --staged --quiet \
+            && echo 'No changes — skipping commit' \
+            || git commit -m "chore: update Starlink TLE data ($(date -u +%Y-%m-%d))"
+          git push

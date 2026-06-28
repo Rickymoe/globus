@@ -3,10 +3,9 @@
 
 import * as THREE from 'three'
 
-const TLE_BASE = 'https://tle.ivanstanojevic.me/api/tle'
 const TLE_SOURCES = [
-  `${TLE_BASE}/?page-size=100`,                          // ISS, Hubble, Tiangong, …
-  `${TLE_BASE}/?search=STARLINK&page-size=100`,          // SpaceX Starlink
+  'https://tle.ivanstanojevic.me/api/tle/?page-size=100',  // ISS, Hubble, Tiangong, …
+  './data/starlinks.json',                                  // all Starlinks — updated daily by GitHub Actions
 ]
 const R_EARTH   = 6371   // km
 const R_GLOBE   = 100    // Three.js units
