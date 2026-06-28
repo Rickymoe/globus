@@ -42,9 +42,9 @@ export async function initUsStates(scene) {
   geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
 
   _lines = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
-    color: 0x00cc44,
+    color: 0xffee44,
     transparent: true,
-    opacity: 0.9,
+    opacity: 0.45,
   }))
   _lines.visible = _visible
   scene.add(_lines)
