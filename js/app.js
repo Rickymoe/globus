@@ -34,7 +34,7 @@ function main() {
   initTerrain(scene)
 initBorders(scene)
   initUsStates(scene)
-  initEarthquakes(scene)
+  initEarthquakes(scene, getCamera(), getCanvas())
   initIss(scene)
   initTectonic(scene)
   initCityLights(scene)
