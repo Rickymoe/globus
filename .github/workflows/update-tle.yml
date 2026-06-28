@@ -2,7 +2,7 @@ name: Update satellite TLE data
 
 on:
   schedule:
-    - cron: '0 4 * * *'   # 04:00 UTC daily
+    - cron: '0 4 * * 0'   # 04:00 UTC every Sunday
   workflow_dispatch:        # allow manual trigger from GitHub UI
 
 jobs:
