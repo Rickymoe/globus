@@ -6,12 +6,14 @@ const REBUILD_MS = 3000   // rebuild geometry every 3 s
 
 // AIS ship type → display info
 function shipMeta(t) {
-  if (t >= 70 && t <= 79) return { label: 'Cargo',     color: new THREE.Color(0.25, 0.55, 1.00) }
-  if (t >= 80 && t <= 89) return { label: 'Tanker',    color: new THREE.Color(1.00, 0.50, 0.10) }
-  if (t >= 60 && t <= 69) return { label: 'Passenger', color: new THREE.Color(0.20, 0.90, 0.40) }
-  if (t === 30)            return { label: 'Fishing',   color: new THREE.Color(1.00, 0.88, 0.10) }
-  if (t >= 50 && t <= 59) return { label: 'Service',   color: new THREE.Color(0.80, 0.55, 1.00) }
-  return                          { label: 'Other',     color: new THREE.Color(0.55, 0.55, 0.55) }
+  if (t >= 70 && t <= 79)              return { label: 'Cargo',     color: new THREE.Color(0.25, 0.55, 1.00) }
+  if (t >= 80 && t <= 89)              return { label: 'Tanker',    color: new THREE.Color(1.00, 0.50, 0.10) }
+  if (t >= 60 && t <= 69)              return { label: 'Passenger', color: new THREE.Color(0.20, 0.90, 0.40) }
+  if (t === 30)                        return { label: 'Fishing',   color: new THREE.Color(1.00, 0.88, 0.10) }
+  if (t === 37 || t === 36)            return { label: 'Pleasure',  color: new THREE.Color(1.00, 0.45, 0.85) }
+  if (t === 31 || t === 32 || t === 52) return { label: 'Tug',      color: new THREE.Color(0.60, 0.85, 0.40) }
+  if (t >= 50 && t <= 59)              return { label: 'Service',   color: new THREE.Color(0.80, 0.55, 1.00) }
+  return                                      { label: 'Other',     color: new THREE.Color(0.55, 0.55, 0.55) }
 }
 
 function toVec3(lat, lon) {
@@ -100,20 +102,24 @@ function _buildPanel() {
 
 function _updatePanel() {
   if (!_panel || _panel.style.display === 'none') return
-  const all    = [..._vessels.values()]
-  const total  = all.length
-  const cargo  = all.filter(v => v.shipType >= 70 && v.shipType <= 79).length
-  const tanker = all.filter(v => v.shipType >= 80 && v.shipType <= 89).length
-  const pass   = all.filter(v => v.shipType >= 60 && v.shipType <= 69).length
-  const fish   = all.filter(v => v.shipType === 30).length
+  const all     = [..._vessels.values()]
+  const total   = all.length
+  const cargo   = all.filter(v => v.shipType >= 70 && v.shipType <= 79).length
+  const tanker  = all.filter(v => v.shipType >= 80 && v.shipType <= 89).length
+  const pass    = all.filter(v => v.shipType >= 60 && v.shipType <= 69).length
+  const fish    = all.filter(v => v.shipType === 30).length
+  const pleasure = all.filter(v => v.shipType === 37 || v.shipType === 36).length
+  const tug     = all.filter(v => v.shipType === 31 || v.shipType === 32 || v.shipType === 52).length
 
   _panel.innerHTML = `
     <div style="font-size:18px;font-weight:600">🚢 ${total.toLocaleString()} vessels live</div>
-    <div style="display:flex;gap:1rem;font-size:12px;flex-wrap:wrap">
+    <div style="display:flex;gap:0.8rem;font-size:12px;flex-wrap:wrap">
       <span style="color:#4488ff">⬤ ${cargo} cargo</span>
       <span style="color:#ff8822">⬤ ${tanker} tanker</span>
       <span style="color:#33ee66">⬤ ${pass} passenger</span>
       <span style="color:#ffdd22">⬤ ${fish} fishing</span>
+      <span style="color:#ff44cc">⬤ ${pleasure} pleasure</span>
+      <span style="color:#88dd55">⬤ ${tug} tug</span>
     </div>
   `
 }
