@@ -107,7 +107,7 @@ async function fetchCountryInfo(lat, lon, clientX, clientY) {
 
   try {
     const geo = await fetch(
-      `${NOMINATIM_URL}?lat=${lat.toFixed(5)}&lon=${lon.toFixed(5)}&format=json&zoom=3&accept-language=en`
+      `${NOMINATIM_URL}?lat=${lat.toFixed(5)}&lon=${lon.toFixed(5)}&format=json&zoom=6&accept-language=en`
     ).then(r => r.json())
 
     const countryCode = geo.address?.country_code?.toUpperCase()
