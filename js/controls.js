@@ -7,7 +7,7 @@ function makeToggle(id, onChange) {
   return el
 }
 
-export function initControls({ onOpacity, onBorders, onLabels, onDragMode, onEquator, onCapitals, onSolarSystem, onSun, onCityLights, onAurora, onWeatherClick, onEarthquakes, onIss, onTectonic, onCountryInfo, onTimezones, onReset }) {
+export function initControls({ onOpacity, onBorders, onLabels, onDragMode, onEquator, onCapitals, onSolarSystem, onSun, onCityLights, onAurora, onWeatherClick, onEarthquakes, onSatellites, onIss, onTectonic, onCountryInfo, onTimezones, onReset }) {
   const dragToggle          = makeToggle('drag-toggle',          onDragMode)
   const labelsToggle        = makeToggle('labels-toggle',        onLabels)
   const bordersToggle       = makeToggle('borders-toggle',       onBorders)
@@ -20,6 +20,7 @@ export function initControls({ onOpacity, onBorders, onLabels, onDragMode, onEqu
   const auroraToggle        = makeToggle('aurora-toggle',        onAurora)
   const weatherToggle       = makeToggle('weather-toggle',       onWeatherClick)
   const earthquakesToggle   = makeToggle('earthquakes-toggle',   onEarthquakes)
+  const satellitesToggle    = makeToggle('satellites-toggle',    onSatellites)
   const issToggle           = makeToggle('iss-toggle',           onIss)
   const tectonicToggle      = makeToggle('tectonic-toggle',      onTectonic)
   const countryInfoToggle   = makeToggle('countryinfo-toggle',   onCountryInfo)
@@ -39,6 +40,7 @@ export function initControls({ onOpacity, onBorders, onLabels, onDragMode, onEqu
   onAurora(auroraToggle.classList.contains('active'))
   onWeatherClick(weatherToggle.classList.contains('active'))
   onEarthquakes(earthquakesToggle.classList.contains('active'))
+  onSatellites(satellitesToggle.classList.contains('active'))
   onIss(issToggle.classList.contains('active'))
   onTectonic(tectonicToggle.classList.contains('active'))
   onCountryInfo(countryInfoToggle.classList.contains('active'))

@@ -25,6 +25,7 @@ import { initStars } from './stars.js'
 import { initSolarSystem, setSolarSystemVisible, updatePlanetScales } from './solar-system.js'
 import { initPlanetCompare, showPlanetPanel, exitPlanetCompare } from './planet-compare.js'
 import { initEonet, setEonetVisible, updateEonet } from './eonet.js'
+import { initSatellites, setSatellitesVisible, updateSatellites } from './satellites.js'
 import { initApiStatus } from './api-status.js'
 
 function main() {
@@ -55,6 +56,7 @@ initBorders(scene)
   initSolarSystem(scene)
   initPlanetCompare(scene, getCamera(), getControls())
   initEonet(scene, getCamera(), getCanvas())
+  initSatellites(scene, getCamera(), getCanvas())
 
   const needle = document.getElementById('compass-needle')
 
@@ -76,6 +78,7 @@ initBorders(scene)
     onAurora: v => { setAuroraVisible(v); setMagnetFieldVisible(v) },
     onWeatherClick: v => { setWeatherClickEnabled(v); setMoonTempEnabled(v) },
     onEarthquakes: v => { setEarthquakesVisible(v); setEonetVisible(v) },
+    onSatellites: setSatellitesVisible,
     onIss: setIssVisible,
     onTectonic: setTectonicVisible,
     onCountryInfo: setCountryInfoEnabled,
@@ -94,6 +97,7 @@ initBorders(scene)
     updateAurora(delta)
     updateMagnetField(delta)
     updateEonet(delta)
+    updateSatellites(delta)
     updateCenterEye(delta)
   })
 }
