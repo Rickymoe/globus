@@ -15,7 +15,7 @@ const CURRENTS = [
   { name: 'Labrador Current', type: 'cold', speed: 0.45, wander: 0.1,
     path: [[65,-52],[60,-50],[55,-48],[50,-45],[43,-43]] },
   { name: 'Kuroshio', type: 'warm', speed: 0.88, wander: 0.1,
-    path: [[20,127],[25,130],[30,134],[35,138],[40,145],[45,155]] },
+    path: [[20,129],[25,132],[30,137],[35,142],[40,147],[45,156]] },
   { name: 'North Pacific Current', type: 'warm', speed: 0.45,
     // Eastward — extend past +180 to avoid Catmull-Rom cutting over Asia
     path: [[45,158],[45,172],[45,182],[45,198],[44,212],[43,225]] },
