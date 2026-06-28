@@ -25,6 +25,22 @@ let _savedCamPos = null
 let _savedTarget = null
 let _savedMinDist = 0
 let _savedMaxDist = 0
+let _tweenId = null
+
+// ── Tween helper ─────────────────────────────────────────────────────────────
+
+function tween(duration, onUpdate, onDone) {
+  if (_tweenId) cancelAnimationFrame(_tweenId)
+  const start = performance.now()
+  function step(now) {
+    const t = Math.min((now - start) / duration, 1)
+    const e = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t  // ease in-out
+    onUpdate(e)
+    if (t < 1) _tweenId = requestAnimationFrame(step)
+    else { _tweenId = null; if (onDone) onDone() }
+  }
+  _tweenId = requestAnimationFrame(step)
+}
 
 export function initPlanetCompare(scene, camera, controls) {
   _camera = camera
@@ -136,33 +152,40 @@ export function enterPlanetCompare(planetName) {
   setSolarSystemVisible(false)
   setAtmosphereVisible(false)
 
-  // Vis kun valgt planet, skjul resten
   for (const child of _compareGroup.children) {
     if (child.userData.planetName) child.visible = child.userData.planetName === planetName
   }
   _compareGroup.visible = true
 
-  // Planet bak Jorda (Jorda er alltid ved origo)
-  const planetZ = -(p.r + EARTH_R + 10)
-  const planetMesh = _compareGroup.children.find(c => c.userData.planetName === planetName)
-  planetMesh.position.set(0, 0, planetZ)
+  // Planet to the right of Earth, gap scales with planet size
+  const gap     = Math.max(60, p.r * 0.15)
+  const planetX = EARTH_R + p.r + gap
+  const midX    = planetX / 2
+  const camDist = (planetX + p.r + EARTH_R) * 1.5
 
-  // Lagre eksisterende kamera/controls-tilstand (kun ved første aktivering)
+  const planetMesh = _compareGroup.children.find(c => c.userData.planetName === planetName)
+  planetMesh.position.set(planetX, 0, 0)
+
   if (!_active) {
-    _savedCamPos = _camera.position.clone()
-    _savedTarget = _controls.target.clone()
+    _savedCamPos  = _camera.position.clone()
+    _savedTarget  = _controls.target.clone()
     _savedMinDist = _controls.minDistance
     _savedMaxDist = _controls.maxDistance
   }
 
-  // Sett kamera tett på Jorda, orbit rundt planetsentrum
-  const target = new THREE.Vector3(0, 0, planetZ)
-  _controls.target.copy(target)
-  _camera.position.set(0, 0, EARTH_R * 3.5)
-  _camera.lookAt(target)
-  _controls.minDistance = p.r * 0.5 + 120
-  _controls.maxDistance = Math.max(p.r * 8, 2000)
-  _controls.update()
+  const toPos    = new THREE.Vector3(midX, 0, camDist)
+  const toTarget = new THREE.Vector3(midX, 0, 0)
+  const fromPos  = _camera.position.clone()
+  const fromTgt  = _controls.target.clone()
+
+  _controls.minDistance = p.r * 0.5 + EARTH_R
+  _controls.maxDistance = Math.max(p.r * 10, 3000)
+
+  tween(800, t => {
+    _camera.position.lerpVectors(fromPos, toPos, t)
+    _controls.target.lerpVectors(fromTgt, toTarget, t)
+    _controls.update()
+  })
 
   _backBtn.style.display = 'block'
   _active = true
@@ -171,22 +194,28 @@ export function enterPlanetCompare(planetName) {
 export function exitPlanetCompare() {
   if (!_active) return
 
-  // Skjul sammenligning
   _compareGroup.visible = false
   for (const child of _compareGroup.children) {
     if (child.userData.planetName) child.visible = false
   }
 
-  // Gjenopprett sol-system (🪐-toggle er fortsatt på)
   setSolarSystemVisible(true)
   setAtmosphereVisible(true)
 
-  // Gjenopprett kamera og controls
-  _camera.position.copy(_savedCamPos)
-  _controls.target.copy(_savedTarget)
-  _controls.minDistance = _savedMinDist
-  _controls.maxDistance = _savedMaxDist
-  _controls.update()
+  const fromPos  = _camera.position.clone()
+  const fromTgt  = _controls.target.clone()
+  const toPos    = _savedCamPos.clone()
+  const toTarget = _savedTarget.clone()
+
+  tween(800, t => {
+    _camera.position.lerpVectors(fromPos, toPos, t)
+    _controls.target.lerpVectors(fromTgt, toTarget, t)
+    _controls.update()
+  }, () => {
+    _controls.minDistance = _savedMinDist
+    _controls.maxDistance = _savedMaxDist
+    _controls.update()
+  })
 
   _backBtn.style.display = 'none'
   _active = false
