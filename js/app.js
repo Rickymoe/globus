@@ -58,7 +58,7 @@ initBorders(scene)
   initPlanetCompare(scene, getCamera(), getControls())
   initEonet(scene, getCamera(), getCanvas())
   initSatellites(scene, getCamera(), getCanvas())
-  initCurrents(scene)
+  initCurrents(scene, getCamera(), getCanvas())
 
   const needle = document.getElementById('compass-needle')
 

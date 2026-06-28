@@ -1,10 +1,11 @@
 import * as THREE from 'three'
 
-const R = 101.2          // just above globe surface
-const PER = 55           // particles per current
+const R = 101.2
+const PER = 55
 const SPEED_SCALE = 0.022
 
-// [lat, lon] waypoints · type: warm|cold · speed: relative 0–1
+// [lat, lon] waypoints · type: warm|cold · speed 0–1
+// Waypoints are kept in ocean — verified against coastlines
 const CURRENTS = [
   { name: 'Gulf Stream', type: 'warm', speed: 1.0,
     path: [[25,-80],[30,-79],[35,-75],[40,-68],[45,-58],[50,-45],[55,-35],[60,-20],[62,-8]] },
@@ -22,10 +23,12 @@ const CURRENTS = [
     path: [[15,-118],[15,-140],[15,-165],[15,178],[15,155],[15,130]] },
   { name: 'Humboldt Current', type: 'cold', speed: 0.5,
     path: [[-40,-75],[-30,-78],[-20,-80],[-10,-82],[0,-84]] },
+  // Brazil Current — follows coastline, stays ~3–5° offshore
   { name: 'Brazil Current', type: 'warm', speed: 0.52,
-    path: [[-5,-35],[-15,-39],[-25,-46],[-35,-55],[-40,-60]] },
+    path: [[-5,-35],[-13,-38],[-22,-43],[-27,-48],[-31,-51],[-34,-52]] },
+  // South Equatorial Atlantic — flows W across Atlantic, ends at Brazilian bulge
   { name: 'South Equatorial (Atlantic)', type: 'warm', speed: 0.6,
-    path: [[5,-15],[2,-25],[-1,-35],[-4,-46],[-6,-55]] },
+    path: [[2,-5],[-1,-15],[-3,-27],[-4,-34]] },
   { name: 'Agulhas Current', type: 'warm', speed: 0.68,
     path: [[-15,40],[-22,37],[-28,34],[-33,28],[-38,25]] },
   { name: 'East Australian Current', type: 'warm', speed: 0.62,
@@ -34,17 +37,21 @@ const CURRENTS = [
     path: [[-55,-60],[-55,-30],[-55,0],[-55,30],[-55,60],
            [-55,90],[-55,120],[-55,150],[-55,178],[-55,-150],[-55,-120],[-55,-90],[-55,-60]] },
   { name: 'Somali Current', type: 'warm', speed: 0.62,
-    path: [[-2,42],[5,46],[10,51],[15,57]] },
+    path: [[-2,42],[5,46],[10,51],[14,54]] },
   { name: 'Indian South Equatorial', type: 'warm', speed: 0.5,
-    path: [[-10,90],[-10,75],[-10,60],[-10,47],[-8,45]] },
+    path: [[-10,90],[-10,75],[-10,60],[-10,47]] },
 ]
 
 const WARM_COL = new THREE.Color(1.0, 0.42, 0.08)
 const COLD_COL = new THREE.Color(0.08, 0.65, 1.0)
 
-let _group = null
-let _points = null
-let _particles = []   // { c, t, speed, phase }
+let _group   = null
+let _points  = null
+let _tooltip = null
+let _camera  = null
+let _canvas  = null
+let _particles  = []
+let _hoverPts   = []   // [{x,y,name,type}] — one per current, screen-space
 let _time = 0
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
@@ -59,7 +66,6 @@ function toVec3(lat, lon) {
   )
 }
 
-// Catmull-Rom spline along [lat,lon] waypoints, t ∈ [0,1]
 function samplePath(path, t, loop) {
   const pts = loop ? [...path, path[0]] : path
   const n   = pts.length - 1
@@ -76,37 +82,93 @@ function samplePath(path, t, loop) {
   return [cr(p0[0],p1[0],p2[0],p3[0]), cr(p0[1],p1[1],p2[1],p3[1])]
 }
 
-// Perpendicular direction at t (for sideways wander)
 function perpAt(path, t) {
-  const a = samplePath(path, Math.max(0, t - 0.01), false)
-  const b = samplePath(path, Math.min(1, t + 0.01), false)
-  const dlat = b[0] - a[0], dlon = b[1] - a[1]
+  const a   = samplePath(path, Math.max(0, t - 0.01), false)
+  const b   = samplePath(path, Math.min(1, t + 0.01), false)
+  const dlat = b[0]-a[0], dlon = b[1]-a[1]
   const len  = Math.sqrt(dlat*dlat + dlon*dlon) || 1
-  return [-dlon / len, dlat / len]   // 90° rotation
+  return [-dlon/len, dlat/len]
 }
-
-// ── Glow texture ──────────────────────────────────────────────────────────────
 
 function makeGlowTex() {
   const c   = document.createElement('canvas')
   c.width = c.height = 32
   const ctx = c.getContext('2d')
-  const g   = ctx.createRadialGradient(16, 16, 0, 16, 16, 14)
+  const g   = ctx.createRadialGradient(16,16,0,16,16,14)
   g.addColorStop(0,   'rgba(255,255,255,1)')
   g.addColorStop(0.3, 'rgba(255,255,255,0.9)')
   g.addColorStop(0.7, 'rgba(255,255,255,0.3)')
   g.addColorStop(1,   'rgba(255,255,255,0)')
   ctx.fillStyle = g
-  ctx.fillRect(0, 0, 32, 32)
+  ctx.fillRect(0,0,32,32)
   return new THREE.CanvasTexture(c)
+}
+
+// ── Hover / tooltip ───────────────────────────────────────────────────────────
+
+function _projectCenters() {
+  if (!_camera || !_canvas) return
+  _hoverPts = []
+  const rect   = _canvas.getBoundingClientRect()
+  const camDir = _camera.position.clone().normalize()
+  for (let c = 0; c < CURRENTS.length; c++) {
+    const cur  = CURRENTS[c]
+    // use midpoint of path as label anchor
+    const [lat, lon] = samplePath(cur.path, 0.5, cur.name === 'Antarctic Circumpolar')
+    const v = toVec3(lat, lon)
+    if (v.clone().normalize().dot(camDir) < 0.15) continue   // behind globe
+    const sc = v.clone().project(_camera)
+    _hoverPts.push({
+      x:    ( sc.x + 1) / 2 * rect.width,
+      y:    (-sc.y + 1) / 2 * rect.height,
+      name: cur.name,
+      type: cur.type,
+    })
+  }
+}
+
+function onMouseMove(e) {
+  if (!_group?.visible) return
+  const rect = _canvas.getBoundingClientRect()
+  const mx = e.clientX - rect.left
+  const my = e.clientY - rect.top
+  let nearest = null, minD = 40
+  for (const h of _hoverPts) {
+    const d = Math.hypot(h.x - mx, h.y - my)
+    if (d < minD) { minD = d; nearest = h }
+  }
+  if (nearest) {
+    const dot   = nearest.type === 'warm' ? '🟠' : '🔵'
+    const label = nearest.type === 'warm' ? 'Varmstrøm' : 'Kaldstrøm'
+    _tooltip.innerHTML  = `${dot} <b>${nearest.name}</b><br><span style="color:#aaa;font-size:11px">${label}</span>`
+    _tooltip.style.left = (nearest.x + 14) + 'px'
+    _tooltip.style.top  = (nearest.y - 10) + 'px'
+    _tooltip.style.display = 'block'
+  } else {
+    _tooltip.style.display = 'none'
+  }
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-export function initCurrents(scene) {
+export function initCurrents(scene, camera, canvas) {
+  _camera = camera
+  _canvas = canvas
+
   _group = new THREE.Group()
   _group.visible = false
   scene.add(_group)
+
+  _tooltip = document.createElement('div')
+  _tooltip.style.cssText = [
+    'position:absolute','background:rgba(8,8,8,0.85)','color:#e0e0e0',
+    'border:1px solid rgba(255,255,255,0.15)','border-radius:8px',
+    'padding:6px 10px','font-size:12px','font-family:system-ui,sans-serif',
+    'pointer-events:none','display:none','z-index:50',
+    'white-space:nowrap','backdrop-filter:blur(4px)',
+  ].join(';')
+  document.getElementById('canvas-container').appendChild(_tooltip)
+  canvas.addEventListener('mousemove', onMouseMove)
 
   const total = CURRENTS.length * PER
   const pos   = new Float32Array(total * 3)
@@ -124,9 +186,7 @@ export function initCurrents(scene) {
         speed: cur.speed * (0.82 + Math.random() * 0.36),
         phase: Math.random() * Math.PI * 2,
       })
-      col[idx*3]   = base.r
-      col[idx*3+1] = base.g
-      col[idx*3+2] = base.b
+      col[idx*3] = base.r; col[idx*3+1] = base.g; col[idx*3+2] = base.b
     }
   }
 
@@ -137,8 +197,7 @@ export function initCurrents(scene) {
   _points = new THREE.Points(geo, new THREE.PointsMaterial({
     size: 2.2, map: makeGlowTex(),
     alphaTest: 0.02, sizeAttenuation: true,
-    vertexColors: true,
-    transparent: true, opacity: 0.9,
+    vertexColors: true, transparent: true, opacity: 0.9,
     blending: THREE.AdditiveBlending, depthWrite: false,
   }))
   _points.renderOrder = 3
@@ -156,17 +215,15 @@ function _tick(delta) {
     const p   = _particles[i]
     p.t = (p.t + p.speed * SPEED_SCALE * delta) % 1
 
-    const cur     = CURRENTS[p.c]
+    const cur = CURRENTS[p.c]
     const [lat, lon] = samplePath(cur.path, p.t, p.loop)
 
-    // Gentle sine-wave wander perpendicular to current
     const wander       = Math.sin(_time * 0.25 + p.phase) * 0.25
     const [dlat, dlon] = perpAt(cur.path, p.t)
 
     const v = toVec3(lat + dlat * wander, lon + dlon * wander)
     pos.setXYZ(i, v.x, v.y, v.z)
 
-    // Pulse brightness for breathing effect
     const pulse = 0.75 + 0.25 * Math.sin(_time * 1.2 + p.phase)
     const base  = cur.type === 'warm' ? WARM_COL : COLD_COL
     col.setXYZ(i, base.r * pulse, base.g * pulse, base.b * pulse)
@@ -174,6 +231,7 @@ function _tick(delta) {
 
   pos.needsUpdate = true
   col.needsUpdate = true
+  _projectCenters()
 }
 
 export function updateCurrents(delta) {
@@ -182,4 +240,5 @@ export function updateCurrents(delta) {
 
 export function setCurrentsVisible(v) {
   if (_group) _group.visible = v
+  if (!v && _tooltip) _tooltip.style.display = 'none'
 }
