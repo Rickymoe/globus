@@ -11,7 +11,10 @@ let _canvas     = null
 let _lat = 0, _lon = 0
 let _info       = null
 let _time       = 0
-let _lastTrack  = 0     // timestamp of last track fetch
+let _lastTrack  = 0
+let _fromPos    = null   // last known position (for interpolation)
+let _toPos      = null   // next known position
+let _interpAge  = 0      // seconds since last fetch
 
 function latLonToVec3(lat, lon, r = R_ISS) {
   const phi   = (90 - lat) * Math.PI / 180
@@ -210,11 +213,12 @@ async function fetchAndUpdate() {
   try {
     const d = await fetch(ISS_URL).then(r => r.json())
     if (d.latitude != null && d.longitude != null) {
-      _lat  = d.latitude
-      _lon  = d.longitude
-      _info = d
-      const v = latLonToVec3(_lat, _lon)
-      if (_sprite) _sprite.position.copy(v)
+      _fromPos   = _sprite ? _sprite.position.clone() : latLonToVec3(d.latitude, d.longitude)
+      _lat       = d.latitude
+      _lon       = d.longitude
+      _info      = d
+      _toPos     = latLonToVec3(_lat, _lon)
+      _interpAge = 0
     }
     _retryDelay = 15000
   } catch {
@@ -257,7 +261,15 @@ export function updateIss(delta) {
   if (!_group?.visible || !_sprite) return
   _time += delta
   _sprite.material.opacity = 0.85 + 0.15 * Math.sin(_time * 2.5)
-  // Refresh track every 5 minutes
+
+  // Smoothly interpolate sprite position between API updates
+  if (_fromPos && _toPos) {
+    _interpAge += delta
+    const t = Math.min(1, _interpAge / 15)   // 15 s = poll interval
+    const v = _fromPos.clone().lerp(_toPos, t).normalize().multiplyScalar(R_ISS)
+    _sprite.position.copy(v)
+  }
+
   if (Date.now() - _lastTrack > 5 * 60 * 1000) refreshTrack()
 }
 
