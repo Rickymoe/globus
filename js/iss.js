@@ -204,17 +204,19 @@ async function refreshTrack() {
 // ── Fetch loop ────────────────────────────────────────────────────────────────
 
 const ISS_URL = 'https://api.wheretheiss.at/v1/satellites/25544'
-let _retryDelay = 5000
+let _retryDelay = 15000
 
 async function fetchAndUpdate() {
   try {
     const d = await fetch(ISS_URL).then(r => r.json())
-    _lat  = d.latitude
-    _lon  = d.longitude
-    _info = d
-    const v = latLonToVec3(_lat, _lon)
-    if (_sprite) _sprite.position.copy(v)
-    _retryDelay = 5000
+    if (d.latitude != null && d.longitude != null) {
+      _lat  = d.latitude
+      _lon  = d.longitude
+      _info = d
+      const v = latLonToVec3(_lat, _lon)
+      if (_sprite) _sprite.position.copy(v)
+    }
+    _retryDelay = 15000
   } catch {
     _retryDelay = Math.min(_retryDelay * 2, 120000)
   }
