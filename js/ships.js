@@ -90,14 +90,13 @@ function _rebuild() {
 function _buildPanel() {
   _panel = document.createElement('div')
   _panel.style.cssText = [
-    'position:fixed','bottom:1rem','left:50%','transform:translateX(-50%)',
     'display:none','flex-direction:column','gap:0.55rem',
     'padding:0.85rem 1.4rem','background:rgba(0,0,0,0.75)',
     'border-radius:1.25rem','backdrop-filter:blur(10px)',
-    'z-index:100','font-family:system-ui,sans-serif','color:white',
+    'font-family:system-ui,sans-serif','color:white',
     'min-width:320px','pointer-events:none',
   ].join(';')
-  document.body.appendChild(_panel)
+  document.getElementById('panel-stack').appendChild(_panel)
 }
 
 function _updatePanel() {

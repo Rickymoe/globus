@@ -285,11 +285,10 @@ function _buildStatsPanel(all, updatedISO) {
 
   _statsPanel = document.createElement('div')
   _statsPanel.style.cssText = [
-    'position:fixed', 'bottom:1rem', 'left:50%', 'transform:translateX(-50%)',
     'display:none', 'flex-direction:column', 'gap:0.55rem',
     'padding:0.85rem 1.4rem', 'background:rgba(0,0,0,0.75)',
     'border-radius:1.25rem', 'backdrop-filter:blur(10px)',
-    'z-index:100', 'font-family:system-ui,sans-serif', 'color:white',
+    'font-family:system-ui,sans-serif', 'color:white',
     'min-width:320px', 'pointer-events:none',
   ].join(';')
 
@@ -305,7 +304,7 @@ function _buildStatsPanel(all, updatedISO) {
       <span><span style="color:#ffd966;font-size:9px">⬤</span> <b>${geo.toLocaleString('nb-NO')}</b> GEO</span>
     </div>
   `
-  document.body.appendChild(_statsPanel)
+  document.getElementById('panel-stack').appendChild(_statsPanel)
 }
 
 export function setSatellitesVisible(v) {
