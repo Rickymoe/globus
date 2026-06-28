@@ -2,15 +2,16 @@ import * as THREE from 'three'
 
 const R_ISS = 106.5
 
-let _group   = null
-let _sprite  = null
-let _orbit   = null   // ground track line
-let _tooltip = null
-let _camera  = null
-let _canvas  = null
+let _group      = null
+let _sprite     = null
+let _trackLine  = null
+let _tooltip    = null
+let _camera     = null
+let _canvas     = null
 let _lat = 0, _lon = 0
-let _info    = null   // { altitude, velocity, lat, lon }
-let _time    = 0
+let _info       = null
+let _time       = 0
+let _lastTrack  = 0     // timestamp of last track fetch
 
 function latLonToVec3(lat, lon, r = R_ISS) {
   const phi   = (90 - lat) * Math.PI / 180
@@ -127,6 +128,64 @@ function onMouseMove(e) {
   }
 }
 
+// ── Orbital track ─────────────────────────────────────────────────────────────
+
+async function fetchTrackPoints() {
+  // 6 hours back, one point every 5 minutes = 72 timestamps
+  const now  = Math.floor(Date.now() / 1000)
+  const step = 300
+  const ts   = Array.from({ length: 72 }, (_, i) => now - (71 - i) * step)
+  const url  = `https://api.wheretheiss.at/v1/satellites/25544/positions?timestamps=${ts.join(',')}&units=kilometers`
+  const data = await fetch(url).then(r => r.json())
+  if (!Array.isArray(data)) return []
+  return data.map(p => ({ lat: p.latitude, lon: p.longitude }))
+}
+
+function buildTrack(points) {
+  if (points.length < 2) return
+
+  const n   = points.length
+  const pos = new Float32Array(n * 3)
+  const col = new Float32Array(n * 3)
+
+  for (let i = 0; i < n; i++) {
+    const v = latLonToVec3(points[i].lat, points[i].lon)
+    pos[i*3] = v.x; pos[i*3+1] = v.y; pos[i*3+2] = v.z
+
+    const t   = i / (n - 1)       // 0 = oldest, 1 = newest
+    const br  = 0.08 + t * 0.72   // brightness fade: dim tail → bright head
+    col[i*3] = br; col[i*3+1] = br * 0.88; col[i*3+2] = 1.0  // cool blue-white
+  }
+
+  if (_trackLine) {
+    _group.remove(_trackLine)
+    _trackLine.geometry.dispose()
+  }
+
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3))
+  geo.setAttribute('color',    new THREE.BufferAttribute(col, 3))
+
+  _trackLine = new THREE.Line(geo, new THREE.LineBasicMaterial({
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.65,
+    depthTest: false,
+  }))
+  _trackLine.renderOrder = 9
+  _group.add(_trackLine)
+}
+
+async function refreshTrack() {
+  try {
+    const pts = await fetchTrackPoints()
+    if (pts.length) buildTrack(pts)
+    _lastTrack = Date.now()
+  } catch (e) {
+    console.warn('[iss] track fetch failed', e.message)
+  }
+}
+
 // ── Fetch loop ────────────────────────────────────────────────────────────────
 
 const ISS_URL = 'https://api.wheretheiss.at/v1/satellites/25544'
@@ -174,13 +233,15 @@ export async function initIss(scene, camera, canvas) {
   canvas.addEventListener('mousemove', onMouseMove)
 
   fetchAndUpdate()
+  refreshTrack()
 }
 
 export function updateIss(delta) {
   if (!_group?.visible || !_sprite) return
   _time += delta
-  // Gentle pulse on the opacity
   _sprite.material.opacity = 0.85 + 0.15 * Math.sin(_time * 2.5)
+  // Refresh track every 5 minutes
+  if (Date.now() - _lastTrack > 5 * 60 * 1000) refreshTrack()
 }
 
 export function setIssVisible(visible) {
