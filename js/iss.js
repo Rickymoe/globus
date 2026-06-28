@@ -131,10 +131,10 @@ function onMouseMove(e) {
 // ── Orbital track ─────────────────────────────────────────────────────────────
 
 async function fetchTrackPoints() {
-  // 6 hours back, one point every 5 minutes = 72 timestamps
+  // 10 points, 36-min intervals = 6 hours back (~2.5 orbits)
   const now  = Math.floor(Date.now() / 1000)
-  const step = 300
-  const ts   = Array.from({ length: 72 }, (_, i) => now - (71 - i) * step)
+  const step = 36 * 60
+  const ts   = Array.from({ length: 10 }, (_, i) => now - (9 - i) * step)
   const url  = `https://api.wheretheiss.at/v1/satellites/25544/positions?timestamps=${ts.join(',')}&units=kilometers`
   const data = await fetch(url).then(r => r.json())
   if (!Array.isArray(data)) return []
