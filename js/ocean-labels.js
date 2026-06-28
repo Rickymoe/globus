@@ -27,6 +27,7 @@ const FADE_END   = 200   // fully hidden below this
 
 let _group   = null
 let _sprites = []
+let _visible = false
 
 function toVec3(lat, lon) {
   const phi   = (90 - lat) * Math.PI / 180
@@ -97,20 +98,19 @@ export function initOceanLabels(scene) {
   }
 }
 
+export function setOceanLabelsVisible(v) {
+  _visible = v
+  if (!v) _sprites.forEach(s => { s.material.opacity = 0 })
+}
+
 export function updateOceanLabels(camera) {
-  if (!_group) return
+  if (!_group || !_visible) return
   const camDist = camera.position.length()
-
-  // Global fade based on zoom
-  const t = Math.max(0, Math.min(1, (camDist - FADE_END) / (FADE_START - FADE_END)))
-
-  // Back-face culling: hide labels on the far side of the globe
-  const camDir = camera.position.clone().normalize()
+  const t       = Math.max(0, Math.min(1, (camDist - FADE_END) / (FADE_START - FADE_END)))
+  const camDir  = camera.position.clone().normalize()
 
   for (const spr of _sprites) {
-    const surfaceNorm = spr.position.clone().normalize()
-    const dot = surfaceNorm.dot(camDir)
-    const facing = dot > 0.05  // visible when facing camera
-    spr.material.opacity = facing ? t : 0
+    const dot = spr.position.clone().normalize().dot(camDir)
+    spr.material.opacity = dot > 0.05 ? t : 0
   }
 }
