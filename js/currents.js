@@ -172,7 +172,7 @@ function onMouseMove(e) {
               + Math.round(col.b*255).toString(16).padStart(2,'0')
     _tooltip.innerHTML =
       `<span style="color:${hex};font-size:9px">⬤</span> <b>${c.name}</b>` +
-      `<br><span style="color:#aaa;font-size:11px">${c.temp}°C overflatetemp</span>`
+      `<br><span style="color:#aaa;font-size:11px">${c.temp}°C surface temp</span>`
     _tooltip.style.left    = (nearest.x+14)+'px'
     _tooltip.style.top     = (nearest.y-10)+'px'
     _tooltip.style.display = 'block'
@@ -207,12 +207,12 @@ function _buildInfoPanel() {
 
   _infoPanel.innerHTML = `
     <div style="display:flex;align-items:baseline;gap:0.6rem">
-      <span style="font-size:18px;font-weight:600">🌊 ${CURRENTS.length} havstrømmer</span>
+      <span style="font-size:18px;font-weight:600">🌊 ${CURRENTS.length} ocean currents</span>
     </div>
     <div style="display:flex;gap:1.2rem;font-size:12px">
-      <span style="color:#ff8844">⬤ ${warm} varmstrømmer</span>
-      <span style="color:#44aaff">⬤ ${cold} kaldstrømmer</span>
-      <span style="color:#aaa">${CURRENTS.length-warm-cold} tempererte</span>
+      <span style="color:#ff8844">⬤ ${warm} warm</span>
+      <span style="color:#44aaff">⬤ ${cold} cold</span>
+      <span style="color:#aaa">${CURRENTS.length-warm-cold} temperate</span>
     </div>
     <div style="font-size:11px;color:#aaa;display:flex;align-items:center;gap:0.5rem">
       <span>${tempMin}°C</span>
