@@ -260,7 +260,7 @@ export async function initIss(scene, camera, canvas) {
 export function updateIss(delta) {
   if (!_group?.visible || !_sprite) return
   _time += delta
-  _sprite.material.opacity = 0.65 + 0.35 * Math.sin(_time * 0.7)
+  _sprite.material.opacity = 0.75 + 0.25 * Math.sin(_time * 0.7)
 
   // Smoothly interpolate sprite position between API updates
   if (_fromPos && _toPos) {
