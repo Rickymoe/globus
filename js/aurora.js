@@ -38,7 +38,7 @@ void main() {
   float w2 = sin(lon * 4.0  - uTime * 0.4  * spd + lat *  9.0 + 1.8);
   float w3 = sin(lon * 11.0 + uTime * 1.1  * spd - lat *  6.0 + 3.5);
   float intensity = (w1 * 0.5 + w2 * 0.3 + w3 * 0.2) * 0.5 + 0.5;
-  intensity = pow(intensity, 1.5) * (0.3 + uActivity * 0.7);
+  intensity = pow(intensity, 1.2) * (0.45 + uActivity * 0.55);
 
   // Color: green↔cyan at low activity, adds red/pink at high activity (Kp > 6)
   float colorPhase = sin(uTime * 0.25 + lon * 2.5) * 0.5 + 0.5;
@@ -51,7 +51,7 @@ void main() {
   // Blend in red/pink at storm-level activity
   col = mix(col, red, smoothstep(0.55, 1.0, uActivity) * 0.5);
 
-  float alpha = inZone * intensity * (0.35 + uActivity * 0.45);
+  float alpha = inZone * intensity * (0.65 + uActivity * 0.35);
   gl_FragColor = vec4(col, alpha);
 }
 `
@@ -60,7 +60,7 @@ export function initAurora(scene) {
   const mat = new THREE.ShaderMaterial({
     uniforms: {
       uTime:     { value: 0 },
-      uActivity: { value: 0.35 },
+      uActivity: { value: 0.5 },
     },
     vertexShader,
     fragmentShader,
