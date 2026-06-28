@@ -116,6 +116,21 @@ function toVec3(lat, lon, alt) {
   )
 }
 
+// ── Circle texture (makes Points render as round dots, not squares) ───────────
+
+function makeCircleTex() {
+  const c = document.createElement('canvas')
+  c.width = c.height = 16
+  const ctx = c.getContext('2d')
+  ctx.beginPath()
+  ctx.arc(8, 8, 7, 0, Math.PI * 2)
+  ctx.fillStyle = '#fff'
+  ctx.fill()
+  return new THREE.CanvasTexture(c)
+}
+
+const _circleTex = makeCircleTex()
+
 // ── Rendering helpers ─────────────────────────────────────────────────────────
 
 function altColor(nRevDay, name) {
@@ -229,7 +244,7 @@ export async function initSatellites(scene, camera, canvas) {
   _satOther = all.filter(s => !s.name.startsWith('STARLINK'))
   _satStarl = all.filter(s =>  s.name.startsWith('STARLINK'))
 
-  function makePoints(data, size) {
+  function makePoints(data) {
     const n   = data.length
     const pos = new Float32Array(n * 3)
     const col = new Float32Array(n * 3)
@@ -242,13 +257,14 @@ export async function initSatellites(scene, camera, canvas) {
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3))
     geo.setAttribute('color',    new THREE.Float32BufferAttribute(col, 3))
     return new THREE.Points(geo, new THREE.PointsMaterial({
-      size, sizeAttenuation: true, vertexColors: true,
+      size: 3, map: _circleTex, alphaTest: 0.5,
+      sizeAttenuation: true, vertexColors: true,
       transparent: true, opacity: 0.9, depthTest: false,
     }))
   }
 
-  _pointsOther = makePoints(_satOther, 3)
-  _pointsStarl = makePoints(_satStarl, 6)
+  _pointsOther = makePoints(_satOther)
+  _pointsStarl = makePoints(_satStarl)
   _group.add(_pointsOther)
   _group.add(_pointsStarl)
 
