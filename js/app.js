@@ -71,12 +71,11 @@ initBorders(scene)
     onCityLights: setCityLightsVisible,
     onAurora: v => { setAuroraVisible(v); setMagnetFieldVisible(v) },
     onWeatherClick: v => { setWeatherClickEnabled(v); setMoonTempEnabled(v) },
-    onEarthquakes: setEarthquakesVisible,
+    onEarthquakes: v => { setEarthquakesVisible(v); setEonetVisible(v) },
     onIss: setIssVisible,
     onTectonic: setTectonicVisible,
     onCountryInfo: setCountryInfoEnabled,
     onTimezones: setTimezonesVisible,
-    onEonet: setEonetVisible,
     onReset: resetCamera,
   })
 
