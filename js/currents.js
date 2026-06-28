@@ -5,36 +5,37 @@ const PER = 55
 const SPEED_SCALE = 0.022
 
 // [lat, lon] waypoints · type: warm|cold · speed 0–1
-// Waypoints are kept in ocean — verified against coastlines
+// wander: max perpendicular oscillation in degrees (default 0.25)
+//         set lower for coast-hugging currents to avoid land intrusion
 const CURRENTS = [
   { name: 'Gulf Stream', type: 'warm', speed: 1.0,
     path: [[25,-80],[30,-79],[35,-75],[40,-68],[45,-58],[50,-45],[55,-35],[60,-20],[62,-8]] },
   { name: 'North Atlantic Drift', type: 'warm', speed: 0.5,
     path: [[60,-20],[62,-10],[65,0],[68,10],[70,20]] },
-  { name: 'Labrador Current', type: 'cold', speed: 0.45,
-    path: [[65,-56],[60,-54],[55,-52],[50,-48],[43,-46]] },
-  { name: 'Kuroshio', type: 'warm', speed: 0.88,
-    path: [[20,130],[25,133],[30,137],[35,141],[40,148],[45,158]] },
+  { name: 'Labrador Current', type: 'cold', speed: 0.45, wander: 0.1,
+    path: [[65,-52],[60,-50],[55,-48],[50,-45],[43,-43]] },
+  { name: 'Kuroshio', type: 'warm', speed: 0.88, wander: 0.1,
+    path: [[20,127],[25,130],[30,134],[35,138],[40,145],[45,155]] },
   { name: 'North Pacific Current', type: 'warm', speed: 0.45,
     // Eastward — extend past +180 to avoid Catmull-Rom cutting over Asia
     path: [[45,158],[45,172],[45,182],[45,198],[44,212],[43,225]] },
-  { name: 'California Current', type: 'cold', speed: 0.42,
-    path: [[55,-132],[50,-130],[45,-127],[38,-124],[30,-118],[22,-110]] },
+  { name: 'California Current', type: 'cold', speed: 0.42, wander: 0.1,
+    path: [[55,-128],[50,-126],[45,-124],[38,-122],[30,-116],[22,-108]] },
   { name: 'North Equatorial (Pacific)', type: 'warm', speed: 0.55,
     // Westward — extend past -180 to avoid Catmull-Rom cutting over Africa
     path: [[15,-118],[15,-140],[15,-165],[15,-182],[15,-205],[15,-230]] },
-  { name: 'Humboldt Current', type: 'cold', speed: 0.5,
-    path: [[-40,-75],[-30,-78],[-20,-80],[-10,-82],[0,-84]] },
-  // Brazil Current — follows coastline, stays ~3–5° offshore
-  { name: 'Brazil Current', type: 'warm', speed: 0.52,
-    path: [[-5,-35],[-13,-38],[-22,-43],[-27,-48],[-31,-51],[-34,-52]] },
-  // South Equatorial Atlantic — flows W across Atlantic, ends at Brazilian bulge
+  { name: 'Humboldt Current', type: 'cold', speed: 0.5, wander: 0.1,
+    path: [[-40,-74],[-30,-76],[-20,-78],[-10,-80],[0,-82]] },
+  // Brazil Current — 3–4° offshore to clear coastline + low wander
+  { name: 'Brazil Current', type: 'warm', speed: 0.52, wander: 0.08,
+    path: [[-5,-32],[-13,-36],[-22,-40],[-27,-46],[-31,-48],[-34,-50]] },
+  // South Equatorial Atlantic — flows W, ends at Brazilian bulge
   { name: 'South Equatorial (Atlantic)', type: 'warm', speed: 0.6,
     path: [[2,-5],[-1,-15],[-3,-27],[-4,-34]] },
-  { name: 'Agulhas Current', type: 'warm', speed: 0.68,
+  { name: 'Agulhas Current', type: 'warm', speed: 0.68, wander: 0.1,
     path: [[-15,40],[-22,37],[-28,34],[-33,28],[-38,25]] },
-  { name: 'East Australian Current', type: 'warm', speed: 0.62,
-    path: [[-15,155],[-22,154],[-28,154],[-33,153],[-38,151],[-42,149]] },
+  { name: 'East Australian Current', type: 'warm', speed: 0.62, wander: 0.1,
+    path: [[-15,158],[-22,157],[-28,156],[-33,155],[-38,153],[-42,151]] },
   { name: 'Antarctic Circumpolar', type: 'cold', speed: 0.38,
     // Monotonically increasing longitude (300 = -60°W) — no antimeridian jump
     path: [[-55,-60],[-55,-30],[-55,0],[-55,30],[-55,60],
@@ -221,7 +222,7 @@ function _tick(delta) {
     const cur = CURRENTS[p.c]
     const [lat, lon] = samplePath(cur.path, p.t, false)
 
-    const wander       = Math.sin(_time * 0.25 + p.phase) * 0.25
+    const wander       = Math.sin(_time * 0.25 + p.phase) * (cur.wander ?? 0.25)
     const [dlat, dlon] = perpAt(cur.path, p.t)
 
     const v = toVec3(lat + dlat * wander, lon + dlon * wander)
