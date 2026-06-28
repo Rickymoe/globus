@@ -11,12 +11,13 @@ const R_GLOBE   = 100    // Three.js units
 const UPDATE_S  = 30     // recompute positions every 30 s
 
 let _group        = null
-let _pointsOther  = null   // cyan/green/gold — size 3
-let _pointsStarl  = null   // white Starlinks  — size 6
+let _pointsOther  = null
+let _pointsStarl  = null
 let _satOther     = []
 let _satStarl     = []
-let _hover    = []       // [{x,y,name,alt}] in screen space
-let _tooltip  = null
+let _hover      = []
+let _tooltip    = null
+let _statsPanel = null
 let _camera   = null
 let _canvas   = null
 let _timer    = 0
@@ -237,8 +238,10 @@ export async function initSatellites(scene, camera, canvas) {
       return r.json()
     }))
   )
-  const all = results.flatMap(r => r.status === 'fulfilled' ? parseTLE(r.value) : [])
+  const jsons = results.filter(r => r.status === 'fulfilled').map(r => r.value)
+  const all   = jsons.flatMap(parseTLE)
   if (!all.length) { console.warn('[satellites] all TLE fetches failed'); return }
+
   _satOther = all.filter(s => !s.name.startsWith('STARLINK'))
   _satStarl = all.filter(s =>  s.name.startsWith('STARLINK'))
 
@@ -265,12 +268,50 @@ export async function initSatellites(scene, camera, canvas) {
   _group.add(_pointsOther)
   _group.add(_pointsStarl)
 
+  _buildStatsPanel(all, jsons[0]?.updated)
   recompute()
+}
+
+function _buildStatsPanel(all, updatedISO) {
+  const satAlt = s => Math.cbrt(398600.4418 / ((s.nRevDay * 2 * Math.PI / 86400) ** 2)) - R_EARTH
+  const starlink = all.filter(s =>  s.name.startsWith('STARLINK')).length
+  const geo      = all.filter(s => !s.name.startsWith('STARLINK') && satAlt(s) > 34000).length
+  const meo      = all.filter(s => !s.name.startsWith('STARLINK') && satAlt(s) > 2000 && satAlt(s) <= 34000).length
+  const leo      = all.filter(s => !s.name.startsWith('STARLINK') && satAlt(s) <= 2000).length
+
+  const updated = updatedISO
+    ? new Date(updatedISO).toLocaleDateString('nb-NO', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '–'
+
+  _statsPanel = document.createElement('div')
+  _statsPanel.style.cssText = [
+    'position:fixed', 'bottom:1rem', 'left:50%', 'transform:translateX(-50%)',
+    'display:none', 'flex-direction:column', 'gap:0.55rem',
+    'padding:0.85rem 1.4rem', 'background:rgba(0,0,0,0.75)',
+    'border-radius:1.25rem', 'backdrop-filter:blur(10px)',
+    'z-index:100', 'font-family:system-ui,sans-serif', 'color:white',
+    'min-width:320px', 'pointer-events:none',
+  ].join(';')
+
+  _statsPanel.innerHTML = `
+    <div style="display:flex;align-items:baseline;gap:0.6rem">
+      <span style="font-size:18px;font-weight:600">🛰️ ${all.length.toLocaleString('nb-NO')} satelitter</span>
+      <span style="font-size:11px;color:#888">Oppdatert ${updated}</span>
+    </div>
+    <div style="display:flex;gap:1.2rem;font-size:12px">
+      <span><span style="color:#fff;font-size:9px">⬤</span> <b>${starlink.toLocaleString('nb-NO')}</b> Starlink</span>
+      <span><span style="color:#00ccff;font-size:9px">⬤</span> <b>${leo.toLocaleString('nb-NO')}</b> LEO</span>
+      <span><span style="color:#4dff88;font-size:9px">⬤</span> <b>${meo.toLocaleString('nb-NO')}</b> MEO</span>
+      <span><span style="color:#ffd966;font-size:9px">⬤</span> <b>${geo.toLocaleString('nb-NO')}</b> GEO</span>
+    </div>
+  `
+  document.body.appendChild(_statsPanel)
 }
 
 export function setSatellitesVisible(v) {
   if (_group) _group.visible = v
   if (!v && _tooltip) _tooltip.style.display = 'none'
+  if (_statsPanel) _statsPanel.style.display = v ? 'flex' : 'none'
 }
 
 export function updateSatellites(delta) {
