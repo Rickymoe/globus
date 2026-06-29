@@ -1,19 +1,18 @@
 import * as THREE from 'three'
 
 const R          = 101.6
-const WS_URL     = 'wss://stream.aisstream.io/v0/stream'
-const REBUILD_MS = 3000   // rebuild geometry every 3 s
+const REBUILD_MS = 3000
+const POLL_MS    = 20 * 60 * 1000   // 20 minutes
 
-// AIS ship type → display info
 function shipMeta(t) {
-  if (t >= 70 && t <= 79)              return { label: 'Cargo',     color: new THREE.Color(0.25, 0.55, 1.00) }
-  if (t >= 80 && t <= 89)              return { label: 'Tanker',    color: new THREE.Color(1.00, 0.50, 0.10) }
-  if (t >= 60 && t <= 69)              return { label: 'Passenger', color: new THREE.Color(0.20, 0.90, 0.40) }
-  if (t === 30)                        return { label: 'Fishing',   color: new THREE.Color(1.00, 0.88, 0.10) }
-  if (t === 37 || t === 36)            return { label: 'Pleasure',  color: new THREE.Color(1.00, 0.45, 0.85) }
-  if (t === 31 || t === 32 || t === 52) return { label: 'Tug',      color: new THREE.Color(0.60, 0.85, 0.40) }
-  if (t >= 50 && t <= 59)              return { label: 'Service',   color: new THREE.Color(0.80, 0.55, 1.00) }
-  return                                      { label: 'Other',     color: new THREE.Color(0.55, 0.55, 0.55) }
+  if (t >= 70 && t <= 79)               return { label: 'Cargo',     color: new THREE.Color(0.25, 0.55, 1.00) }
+  if (t >= 80 && t <= 89)               return { label: 'Tanker',    color: new THREE.Color(1.00, 0.50, 0.10) }
+  if (t >= 60 && t <= 69)               return { label: 'Passenger', color: new THREE.Color(0.20, 0.90, 0.40) }
+  if (t === 30)                         return { label: 'Fishing',   color: new THREE.Color(1.00, 0.88, 0.10) }
+  if (t === 37 || t === 36)             return { label: 'Pleasure',  color: new THREE.Color(1.00, 0.45, 0.85) }
+  if (t === 31 || t === 32 || t === 52) return { label: 'Tug',       color: new THREE.Color(0.60, 0.85, 0.40) }
+  if (t >= 50 && t <= 59)               return { label: 'Service',   color: new THREE.Color(0.80, 0.55, 1.00) }
+  return                                       { label: 'Other',     color: new THREE.Color(0.55, 0.55, 0.55) }
 }
 
 function toVec3(lat, lon) {
@@ -39,21 +38,20 @@ function makeGlowTex() {
   return new THREE.CanvasTexture(c)
 }
 
-let _group     = null
-let _points    = null
-let _material  = null
-let _tooltip   = null
-let _panel     = null
-let _camera    = null
-let _canvas    = null
-let _ws        = null
-let _visible   = false
-let _dirty     = false
+let _group    = null
+let _points   = null
+let _material = null
+let _tooltip  = null
+let _panel    = null
+let _camera   = null
+let _canvas   = null
+let _visible  = false
+let _dirty    = false
 let _lastBuild = 0
 let _hoverPts  = []
 let _time      = 0
 
-const _vessels = new Map()   // mmsi → { lat, lon, name, shipType, sog }
+const _vessels = new Map()   // mmsi → { mmsi, lat, lon, name, shipType, sog }
 
 // ── Geometry rebuild ──────────────────────────────────────────────────────────
 
@@ -99,7 +97,7 @@ function _buildPanel() {
   document.getElementById('panel-stack').appendChild(_panel)
 }
 
-function _updatePanel() {
+function _updatePanel(generated) {
   if (!_panel || _panel.style.display === 'none') return
   const all     = [..._vessels.values()]
   const total   = all.length
@@ -110,8 +108,12 @@ function _updatePanel() {
   const pleasure = all.filter(v => v.shipType === 37 || v.shipType === 36).length
   const tug     = all.filter(v => v.shipType === 31 || v.shipType === 32 || v.shipType === 52).length
 
+  const timeStr = generated
+    ? new Date(generated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : '—'
+
   _panel.innerHTML = `
-    <div style="font-size:18px;font-weight:600">🚢 ${total.toLocaleString()} vessels live</div>
+    <div style="font-size:18px;font-weight:600">🚢 ${total.toLocaleString()} vessels · updated ${timeStr}</div>
     <div style="display:flex;gap:0.8rem;font-size:12px;flex-wrap:wrap">
       <span style="color:#4488ff">⬤ ${cargo} cargo</span>
       <span style="color:#ff8822">⬤ ${tanker} tanker</span>
@@ -172,63 +174,25 @@ function onMouseMove(e) {
   }
 }
 
-// ── WebSocket ─────────────────────────────────────────────────────────────────
+// ── Data fetch ────────────────────────────────────────────────────────────────
 
-async function _connect(apiKey) {
-  if (_ws) { _ws.close(); _ws = null }
+let _lastGenerated = null
 
-  _ws = new WebSocket(WS_URL)
-
-  _ws.onopen = () => {
-    console.log('[ships] WebSocket connected')
-    _ws.send(JSON.stringify({
-      APIKey: apiKey,
-      BoundingBoxes: [[[-90, -180], [90, 180]]],
-      FilterMessageTypes: ['PositionReport', 'ShipStaticData'],
-    }))
-  }
-
-  _ws.onmessage = async (e) => {
-    try {
-      const text = typeof e.data === 'string' ? e.data : await e.data.text()
-      const msg  = JSON.parse(text)
-      const meta = msg.MetaData
-      if (!meta?.MMSI) return
-
-      const mmsi     = meta.MMSI
-      const existing = _vessels.get(mmsi) ?? {}
-
-      if (msg.MessageType === 'ShipStaticData') {
-        const s = msg.Message?.ShipStaticData
-        if (!s) return
-        _vessels.set(mmsi, {
-          ...existing,
-          mmsi,
-          name:     s.Name?.trim() || meta.ShipName?.trim() || existing.name,
-          shipType: s.Type ?? existing.shipType ?? 0,
-          lat:      existing.lat ?? meta.latitude ?? null,
-          lon:      existing.lon ?? meta.longitude ?? null,
-        })
-      } else {
-        // PositionReport
-        if (meta.latitude == null) return
-        _vessels.set(mmsi, {
-          ...existing,
-          mmsi,
-          lat:  meta.latitude,
-          lon:  meta.longitude,
-          name: meta.ShipName?.trim() || existing.name,
-          sog:  msg.Message?.PositionReport?.Sog,
-        })
-      }
-      _dirty = true
-    } catch { /* skip malformed */ }
-  }
-
-  _ws.onerror = e => console.warn('[ships] WebSocket error', e)
-  _ws.onclose = () => {
-    console.log('[ships] WebSocket closed — reconnecting in 10 s')
-    if (_visible) setTimeout(() => _connect(apiKey), 10_000)
+async function _load() {
+  try {
+    const data = await fetch('data/ships.json').then(r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      return r.json()
+    })
+    _vessels.clear()
+    for (const v of data.vessels) {
+      if (v.lat != null && v.lon != null) _vessels.set(v.mmsi, v)
+    }
+    _lastGenerated = data.generated ?? null
+    _dirty = true
+    console.log(`[ships] loaded ${_vessels.size} vessels (generated ${_lastGenerated})`)
+  } catch (e) {
+    console.warn('[ships] failed to load data/ships.json:', e.message)
   }
 }
 
@@ -261,18 +225,8 @@ export async function initShips(scene, camera, canvas) {
   canvas.addEventListener('mousemove', onMouseMove)
 
   _buildPanel()
-
-  // Load API key from data/config.json (gitignored)
-  try {
-    const cfg = await fetch('./data/config.json').then(r => r.json())
-    if (cfg.aisApiKey) {
-      _connect(cfg.aisApiKey)
-    } else {
-      console.warn('[ships] data/config.json has no aisApiKey')
-    }
-  } catch {
-    console.warn('[ships] No data/config.json found — add { "aisApiKey": "..." }')
-  }
+  await _load()
+  setInterval(_load, POLL_MS)
 }
 
 export function updateShips(delta) {
@@ -283,6 +237,7 @@ export function updateShips(delta) {
   if (_dirty && now - _lastBuild > REBUILD_MS) {
     _lastBuild = now
     _rebuild()
+    _updatePanel(_lastGenerated)
     _projectVessels()
   }
 }
@@ -293,6 +248,6 @@ export function setShipsVisible(v) {
   if (!v && _tooltip) _tooltip.style.display = 'none'
   if (_panel) {
     _panel.style.display = v ? 'flex' : 'none'
-    if (v) _updatePanel()
+    if (v) _updatePanel(_lastGenerated)
   }
 }
