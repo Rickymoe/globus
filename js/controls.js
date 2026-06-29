@@ -7,7 +7,7 @@ function makeToggle(id, onChange) {
   return el
 }
 
-export function initControls({ onOpacity, onBorders, onLabels, onDragMode, onEquator, onCapitals, onSolarSystem, onSun, onCityLights, onAurora, onWeatherClick, onEarthquakes, onSatellites, onIss, onTectonic, onCountryInfo, onTimezones, onCurrents, onShips, onReset }) {
+export function initControls({ onOpacity, onBorders, onLabels, onDragMode, onEquator, onCapitals, onSolarSystem, onSun, onCityLights, onAurora, onWeatherClick, onEarthquakes, onSatellites, onIss, onTectonic, onCountryInfo, onTimezones, onCurrents, onShips, onMeteors, onReset }) {
   const dragToggle          = makeToggle('drag-toggle',          onDragMode)
   const labelsToggle        = makeToggle('labels-toggle',        onLabels)
   const bordersToggle       = makeToggle('borders-toggle',       onBorders)
@@ -27,6 +27,7 @@ export function initControls({ onOpacity, onBorders, onLabels, onDragMode, onEqu
   const timezonesToggle     = makeToggle('timezones-toggle',     onTimezones)
   const currentsToggle      = makeToggle('currents-toggle',      onCurrents)
   const shipsToggle         = makeToggle('ships-toggle',         onShips)
+  const meteorsToggle       = makeToggle('meteors-toggle',       onMeteors)
 
   document.getElementById('compass')?.addEventListener('click', onReset)
 
@@ -49,4 +50,5 @@ export function initControls({ onOpacity, onBorders, onLabels, onDragMode, onEqu
   onTimezones(timezonesToggle.classList.contains('active'))
   onCurrents(currentsToggle.classList.contains('active'))
   onShips(shipsToggle.classList.contains('active'))
+  onMeteors(meteorsToggle.classList.contains('active'))
 }
