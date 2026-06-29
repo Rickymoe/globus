@@ -238,8 +238,8 @@ export function updateShips(delta) {
     _lastBuild = now
     _rebuild()
     _updatePanel(_lastGenerated)
-    _projectVessels()
   }
+  _projectVessels()
 }
 
 export function setShipsVisible(v) {
