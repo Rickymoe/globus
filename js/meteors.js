@@ -126,9 +126,11 @@ function _spawnMeteor(active) {
   if (active && Math.random() < 0.85) {
     // Shower meteor: comes from radiant direction with small spread
     const rd = _radiantDir(active.shower.ra, active.shower.dec)
-    const perp  = new THREE.Vector3(-rd.y, rd.x, 0).normalize()
+    let perp = new THREE.Vector3(-rd.y, rd.x, 0)
+    if (perp.lengthSq() < 1e-6) perp.set(0, -rd.z, rd.y)
+    perp.normalize()
     const perp2 = rd.clone().cross(perp).normalize()
-    incomingDir = rd.clone()
+    incomingDir = rd.clone().negate()
       .addScaledVector(perp,  (Math.random() - 0.5) * 0.3)
       .addScaledVector(perp2, (Math.random() - 0.5) * 0.3)
       .normalize()
@@ -142,7 +144,9 @@ function _spawnMeteor(active) {
   }
 
   // Tangential spread so meteors don't all overlap
-  const perp  = new THREE.Vector3(-incomingDir.y, incomingDir.x, 0).normalize()
+  let perp = new THREE.Vector3(-incomingDir.y, incomingDir.x, 0)
+  if (perp.lengthSq() < 1e-6) perp.set(0, -incomingDir.z, incomingDir.y)
+  perp.normalize()
   const perp2 = incomingDir.clone().cross(perp).normalize()
   const offsetAngle = Math.random() * Math.PI * 2
   const offsetR     = Math.random() * 55
