@@ -71,3 +71,8 @@ ws.on('message', data => {
 })
 
 ws.on('error', e => { console.error('[fetch-ships] error', e.message); process.exit(1) })
+
+ws.on('unexpected-response', (_req, res) => {
+  console.error(`[fetch-ships] unexpected HTTP response: ${res.statusCode}`)
+  process.exit(1)
+})
