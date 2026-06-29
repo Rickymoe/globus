@@ -1,0 +1,41 @@
+name: Update ships snapshot
+
+on:
+  schedule:
+    - cron: '*/20 * * * *'   # every 20 minutes
+  workflow_dispatch:           # manual trigger from GitHub UI
+
+jobs:
+  update-ships:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need full history for branch switching
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install ws package
+        run: npm install ws
+
+      - name: Fetch AIS snapshot
+        env:
+          AIS_KEY: ${{ secrets.AIS_API_KEY }}
+        run: node scripts/fetch-ships.js
+        # writes /tmp/ships.json
+
+      - name: Commit snapshot to gh-pages
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git fetch origin gh-pages
+          git checkout gh-pages
+          cp /tmp/ships.json data/ships.json
+          git add data/ships.json
+          git commit -m "chore: ships snapshot $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push origin gh-pages
