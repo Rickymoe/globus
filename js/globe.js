@@ -1,6 +1,5 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-import { VRButton } from 'three/addons/webxr/VRButton.js'
 
 let _scene, _camera, _renderer, _controls, _clock
 let _resetting = false
@@ -45,6 +44,39 @@ function calcMoonPosition() {
 }
 const DEFAULT_CAM = new THREE.Vector3(0, 0, 280)
 
+function _initVRButton(renderer) {
+  if (!navigator.xr) return
+  navigator.xr.isSessionSupported('immersive-vr').then(supported => {
+    if (!supported) return
+    const btn = document.createElement('button')
+    btn.textContent = 'Enter VR'
+    btn.style.cssText = [
+      'position:fixed', 'top:1rem', 'right:1rem', 'z-index:200',
+      'background:rgba(0,0,0,0.7)', 'color:#fff',
+      'border:1px solid rgba(255,255,255,0.25)', 'border-radius:0.6rem',
+      'padding:0.45rem 1rem', 'font:13px system-ui,sans-serif',
+      'cursor:pointer', 'backdrop-filter:blur(6px)',
+      'transition:background 0.15s',
+    ].join(';')
+    btn.onmouseenter = () => btn.style.background = 'rgba(255,255,255,0.15)'
+    btn.onmouseleave = () => btn.style.background = 'rgba(0,0,0,0.7)'
+    document.body.appendChild(btn)
+
+    btn.addEventListener('click', async () => {
+      if (renderer.xr.isPresenting) {
+        await renderer.xr.getSession().end()
+      } else {
+        const session = await navigator.xr.requestSession('immersive-vr', {
+          optionalFeatures: ['local-floor', 'bounded-floor'],
+        })
+        await renderer.xr.setSession(session)
+        btn.textContent = 'Exit VR'
+        session.addEventListener('end', () => { btn.textContent = 'Enter VR' })
+      }
+    })
+  })
+}
+
 export function initScene(container) {
   _scene = new THREE.Scene()
   _clock = new THREE.Clock()
@@ -59,7 +91,7 @@ export function initScene(container) {
   _renderer.setSize(w, h)
   _renderer.xr.enabled = true
   container.appendChild(_renderer.domElement)
-  document.body.appendChild(VRButton.createButton(_renderer))
+  _initVRButton(_renderer)
 
   // Offset XR reference space so viewer starts at the default camera distance
   _renderer.xr.addEventListener('sessionstart', () => {
