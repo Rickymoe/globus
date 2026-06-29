@@ -5,24 +5,26 @@ import * as THREE from 'three'
 // peak:   [month, day]
 // ra/dec: J2000 radiant coordinates (degrees)
 const SHOWERS = [
-  { name:'Quadrantids',    peak:[1,3],   window:[[12,28],[1,12]],  zhr:120, ra:230, dec:49  },
-  { name:'Lyrids',         peak:[4,22],  window:[[4,14],[4,30]],   zhr:18,  ra:271, dec:33  },
-  { name:'Eta Aquariids',  peak:[5,6],   window:[[4,19],[5,28]],   zhr:50,  ra:338, dec:-1  },
-  { name:'Perseids',       peak:[8,12],  window:[[7,17],[8,24]],   zhr:100, ra:48,  dec:58  },
-  { name:'Draconids',      peak:[10,8],  window:[[10,6],[10,10]],  zhr:10,  ra:262, dec:54  },
-  { name:'Orionids',       peak:[10,21], window:[[10,2],[11,7]],   zhr:20,  ra:95,  dec:16  },
-  { name:'Leonids',        peak:[11,17], window:[[11,6],[11,30]],  zhr:15,  ra:152, dec:22  },
-  { name:'Geminids',       peak:[12,14], window:[[12,4],[12,20]],  zhr:120, ra:112, dec:33  },
-  { name:'Ursids',         peak:[12,22], window:[[12,17],[12,26]], zhr:10,  ra:217, dec:76  },
+  { name:'Quadrantids',    peak:[1,3],   window:[[12,28],[1,12]],  zhr:120, ra:230, dec:49,  color:[0.4,0.7,1.0] },
+  { name:'Lyrids',         peak:[4,22],  window:[[4,14],[4,30]],   zhr:18,  ra:271, dec:33,  color:[0.7,1.0,0.6] },
+  { name:'Eta Aquariids',  peak:[5,6],   window:[[4,19],[5,28]],   zhr:50,  ra:338, dec:-1,  color:[0.4,0.8,1.0] },
+  { name:'Perseids',       peak:[8,12],  window:[[7,17],[8,24]],   zhr:100, ra:48,  dec:58,  color:[0.3,0.6,1.0] },
+  { name:'Draconids',      peak:[10,8],  window:[[10,6],[10,10]],  zhr:10,  ra:262, dec:54,  color:[0.5,1.0,0.5] },
+  { name:'Orionids',       peak:[10,21], window:[[10,2],[11,7]],   zhr:20,  ra:95,  dec:16,  color:[1.0,0.6,0.2] },
+  { name:'Leonids',        peak:[11,17], window:[[11,6],[11,30]],  zhr:15,  ra:152, dec:22,  color:[1.0,0.4,0.1] },
+  { name:'Geminids',       peak:[12,14], window:[[12,4],[12,20]],  zhr:120, ra:112, dec:33,  color:[1.0,0.85,0.3] },
+  { name:'Ursids',         peak:[12,22], window:[[12,17],[12,26]], zhr:10,  ra:217, dec:76,  color:[0.6,0.8,1.0] },
 ]
+
+const SPORADIC_COLOR = [0.55, 0.7, 1.0]
 
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 const SPAWN_R    = 400   // spawn radius (deep space)
 const BURN_R     = 108   // burn-up radius (in atmosphere)
-const TRAIL_LEN  = 35    // world units for streak length
-const MAX_ACTIVE = 60    // max simultaneous meteor lines
-const SPORADIC_RATE = 0.1  // meteors/sec always on
+const TRAIL_LEN  = 55    // world units for streak length
+const MAX_ACTIVE = 80    // max simultaneous meteor lines
+const SPORADIC_RATE = 0.25  // meteors/sec always on
 
 // ── Module state ──────────────────────────────────────────────────────────────
 let _group     = null
@@ -122,6 +124,7 @@ function _updateRadiantSprite(active) {
 
 function _spawnMeteor(active) {
   let incomingDir
+  let tailColor = SPORADIC_COLOR
 
   if (active && Math.random() < 0.85) {
     // Shower meteor: comes from radiant direction with small spread
@@ -134,6 +137,7 @@ function _spawnMeteor(active) {
       .addScaledVector(perp,  (Math.random() - 0.5) * 0.3)
       .addScaledVector(perp2, (Math.random() - 0.5) * 0.3)
       .normalize()
+    tailColor = active.shower.color
   } else {
     // Sporadic: random direction
     incomingDir = new THREE.Vector3(
@@ -161,22 +165,27 @@ function _spawnMeteor(active) {
   const duration = ((SPAWN_R - BURN_R) / speed) * (0.65 + Math.random() * 0.25)
 
   const positions = new Float32Array(6)
+  const colors    = new Float32Array([
+    tailColor[0] * 0.6, tailColor[1] * 0.6, tailColor[2] * 0.6,  // tail: dim colored
+    1, 1, 1,                                                        // head: bright white
+  ])
   const geo = new THREE.BufferGeometry()
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+  geo.setAttribute('color',    new THREE.BufferAttribute(colors, 3))
 
   const mat = new THREE.LineBasicMaterial({
-    color:       0xffeedd,
-    transparent: true,
-    opacity:     0.9,
-    depthWrite:  false,
-    blending:    THREE.AdditiveBlending,
+    vertexColors: true,
+    transparent:  true,
+    opacity:      1.0,
+    depthWrite:   false,
+    blending:     THREE.AdditiveBlending,
   })
 
   const line          = new THREE.Line(geo, mat)
   line.frustumCulled  = false
   _group.add(line)
 
-  return { head0, velocity, age: 0, duration, line, mat }
+  return { head0, velocity, age: 0, duration, line, mat, tailColor }
 }
 
 // ── Panel ─────────────────────────────────────────────────────────────────────
@@ -193,29 +202,43 @@ function _buildPanel() {
   document.getElementById('panel-stack').appendChild(_panel)
 }
 
+function _colorHex(rgb) {
+  return '#' + rgb.map(v => Math.round(v * 255).toString(16).padStart(2, '0')).join('')
+}
+
 function _updatePanel(active) {
   if (!_panel || _panel.style.display === 'none') return
   if (active) {
-    const s        = active.shower
-    const dayStr   = `${s.peak[1]}. ${MONTHS_SHORT[s.peak[0] - 1]}`
-    const diff     = active.today - active.peakDoy
-    const daysStr  = diff === 0 ? 'Peak today!'
-      : diff < 0   ? `${-diff} days to peak (${dayStr})`
-      :              `${diff} days after peak`
+    const s       = active.shower
+    const hex     = _colorHex(s.color)
+    const dayStr  = `${s.peak[1]}. ${MONTHS_SHORT[s.peak[0] - 1]}`
+    const diff    = active.today - active.peakDoy
+    const daysStr = diff === 0 ? '🌟 Peak today!'
+      : diff < 0  ? `${-diff} days to peak (${dayStr})`
+      :             `${diff} days after peak (${dayStr})`
+    const intensity = Math.min(1, s.zhr / 120)
+    const bars      = Math.round(intensity * 8)
+    const barStr    = '█'.repeat(bars) + '░'.repeat(8 - bars)
     _panel.innerHTML = `
-      <div style="display:flex;align-items:baseline;gap:0.5rem">
-        <span style="font-size:18px;font-weight:600">☄️ ${s.name}</span>
-        <span style="font-size:11px;color:#888">ZHR ~${s.zhr}</span>
+      <div style="display:flex;align-items:center;gap:0.6rem">
+        <span style="font-size:18px;font-weight:700;color:${hex}">☄️ ${s.name}</span>
+      </div>
+      <div style="font-size:11px;color:#aaa;letter-spacing:0.05em">
+        <span style="color:${hex};font-family:monospace">${barStr}</span>
+        &nbsp;ZHR ~${s.zhr}
       </div>
       <div style="font-size:12px;color:#bbb">${daysStr}</div>
     `
   } else {
     const next = _nextShower()
     const s    = next?.shower
-    const ns   = s ? `${s.name} · ${s.peak[1]}. ${MONTHS_SHORT[s.peak[0]-1]} (in ${next.days} days)` : '—'
+    const hex  = s ? _colorHex(s.color) : '#888'
+    const ns   = s
+      ? `<span style="color:${hex}">${s.name}</span> · ${s.peak[1]}. ${MONTHS_SHORT[s.peak[0]-1]} (in ${next.days} days)`
+      : '—'
     _panel.innerHTML = `
-      <div style="font-size:18px;font-weight:600">☄️ Sporadic meteors</div>
-      <div style="font-size:12px;color:#888">Next shower: ${ns}</div>
+      <div style="font-size:17px;font-weight:600;color:#aaa">☄️ Sporadic meteors</div>
+      <div style="font-size:12px;color:#666">Next shower: ${ns}</div>
     `
   }
 }
@@ -298,8 +321,12 @@ export function updateMeteors(delta) {
     pos.setXYZ(1, head.x, head.y, head.z)
     pos.needsUpdate = true
 
-    // Fade out in last 35% of life
-    m.mat.opacity = t > 0.65 ? ((1 - t) / 0.35) * 0.9 : 0.9
+    // Fade via vertex colors: head white→dim, tail colored→black
+    const fade = t > 0.65 ? (1 - t) / 0.35 : 1.0
+    const col  = m.line.geometry.attributes.color
+    col.setXYZ(0, m.tailColor[0] * 0.6 * fade, m.tailColor[1] * 0.6 * fade, m.tailColor[2] * 0.6 * fade)
+    col.setXYZ(1, fade, fade, fade)
+    col.needsUpdate = true
   }
 
   for (const m of toRemove) {
