@@ -17,11 +17,8 @@ jobs:
           fetch-depth: 0
 
       - name: Prepare deploy directory
-        env:
-          AIS_KEY: ${{ secrets.AIS_API_KEY }}
         run: |
           cp -r . /tmp/deploy
-          echo "{\"aisApiKey\":\"$AIS_KEY\"}" > /tmp/deploy/data/config.json
 
       - name: Restore ships snapshot
         run: |
