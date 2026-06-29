@@ -27,6 +27,7 @@ import { initEonet, setEonetVisible, updateEonet } from './eonet.js'
 import { initSatellites, setSatellitesVisible, updateSatellites } from './satellites.js'
 import { initCurrents, setCurrentsVisible, updateCurrents } from './currents.js'
 import { initShips, setShipsVisible, updateShips } from './ships.js'
+import { initMeteors, setMeteorsVisible, updateMeteors } from './meteors.js'
 import { initOceanLabels, setOceanLabelsVisible, updateOceanLabels } from './ocean-labels.js'
 import { initApiStatus } from './api-status.js'
 
@@ -61,6 +62,7 @@ initBorders(scene)
   initSatellites(scene, getCamera(), getCanvas())
   initCurrents(scene, getCamera(), getCanvas())
   initShips(scene, getCamera(), getCanvas())
+  initMeteors(scene)
   initOceanLabels(scene)
 
   const needle = document.getElementById('compass-needle')
@@ -89,6 +91,7 @@ initBorders(scene)
     onTimezones: setTimezonesVisible,
     onCurrents: v => { setCurrentsVisible(v); setOceanLabelsVisible(v) },
     onShips: setShipsVisible,
+    onMeteors: setMeteorsVisible,
     onReset: resetCamera,
   })
 
@@ -107,6 +110,7 @@ initBorders(scene)
     updateIss(delta)
     updateCurrents(delta)
     updateShips(delta)
+    updateMeteors(delta)
     updateOceanLabels(getCamera())
     updateCenterEye(delta)
   })
