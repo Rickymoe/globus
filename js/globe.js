@@ -45,19 +45,26 @@ function calcMoonPosition() {
 const DEFAULT_CAM = new THREE.Vector3(0, 0, 280)
 
 function _initVRButton(renderer) {
+  const BASE_STYLE = [
+    'position:fixed', 'top:1rem', 'right:1rem', 'z-index:200',
+    'background:rgba(0,0,0,0.7)', 'color:#fff',
+    'border:1px solid rgba(255,255,255,0.25)', 'border-radius:0.6rem',
+    'padding:0.45rem 1rem', 'font:13px system-ui,sans-serif',
+    'backdrop-filter:blur(6px)',
+  ].join(';')
+
+  const badge = document.createElement('div')
+  badge.textContent = '🥽 VR compatible'
+  badge.style.cssText = BASE_STYLE + ';pointer-events:none;color:rgba(255,255,255,0.45)'
+  document.body.appendChild(badge)
+
   if (!navigator.xr) return
   navigator.xr.isSessionSupported('immersive-vr').then(supported => {
     if (!supported) return
+    badge.remove()
     const btn = document.createElement('button')
     btn.textContent = 'Enter VR'
-    btn.style.cssText = [
-      'position:fixed', 'top:1rem', 'right:1rem', 'z-index:200',
-      'background:rgba(0,0,0,0.7)', 'color:#fff',
-      'border:1px solid rgba(255,255,255,0.25)', 'border-radius:0.6rem',
-      'padding:0.45rem 1rem', 'font:13px system-ui,sans-serif',
-      'cursor:pointer', 'backdrop-filter:blur(6px)',
-      'transition:background 0.15s',
-    ].join(';')
+    btn.style.cssText = BASE_STYLE + ';cursor:pointer;transition:background 0.15s'
     btn.onmouseenter = () => btn.style.background = 'rgba(255,255,255,0.15)'
     btn.onmouseleave = () => btn.style.background = 'rgba(0,0,0,0.7)'
     document.body.appendChild(btn)
