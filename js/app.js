@@ -1,4 +1,5 @@
-import { initScene, startLoop, resetCamera, getCompassAngle, getCamera, getControls, getCanvas, setSunEnabled, setMoonTempEnabled, setMoonOpacity, setApolloVisible, getSunDirection } from './globe.js'
+import { initScene, startLoop, resetCamera, getCompassAngle, getCamera, getControls, getCanvas, getRenderer, setSunEnabled, setMoonTempEnabled, setMoonOpacity, setApolloVisible, getSunDirection } from './globe.js'
+import { initVRControls, updateVRControls } from './vr-controls.js'
 import { initAtmosphere, updateAtmosphere, setSunOnAtmosphere } from './atmosphere.js'
 import { initTerrain, setSeaLevel, setOpacity, updateAtmGlow } from './terrain.js'
 import { setGravity, setWindDirection } from './particles.js'
@@ -64,6 +65,7 @@ initBorders(scene)
   initShips(scene, getCamera(), getCanvas())
   initMeteors(scene)
   initOceanLabels(scene)
+  initVRControls(getRenderer(), getCamera())
 
   const needle = document.getElementById('compass-needle')
 
@@ -96,6 +98,7 @@ initBorders(scene)
   })
 
   startLoop(delta => {
+    updateVRControls(delta)
     needle.style.transform = `rotate(${getCompassAngle()}deg)`
     updatePlanetScales(getCamera())
     updateEarthquakes(delta)
