@@ -18,8 +18,8 @@ export function initVRControls(renderer, camera) {
   renderer.xr.addEventListener('sessionstart', () => {
     const raw = renderer.xr.getReferenceSpace()
     if (!raw?.getOffsetReferenceSpace) return
-    _camDist     = _camera.position.length() || 280
-    _azimuth     = Math.atan2(_camera.position.x, _camera.position.z)
+    _camDist     = Math.hypot(_camera.position.x, _camera.position.z) || 280
+    _azimuth     = 0
     _baseRefSpace = raw
     _applyOffset()
     document.body.classList.add('vr-active')
