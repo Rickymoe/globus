@@ -93,15 +93,6 @@ export function initScene(container) {
   container.appendChild(_renderer.domElement)
   _initVRButton(_renderer)
 
-  // Offset XR reference space so viewer starts at the default camera distance
-  _renderer.xr.addEventListener('sessionstart', () => {
-    const refSpace = _renderer.xr.getReferenceSpace()
-    if (refSpace?.getOffsetReferenceSpace) {
-      const offset = new XRRigidTransform({ x: 0, y: -1.6, z: 280 })
-      _renderer.xr.setReferenceSpace(refSpace.getOffsetReferenceSpace(offset))
-    }
-  })
-
   _controls = new OrbitControls(_camera, _renderer.domElement)
   _controls.enableDamping = true
   _controls.dampingFactor = 0.05
@@ -267,6 +258,7 @@ export function setInsideGlobe(inside) {
 export function getCamera()      { return _camera }
 export function getControls()    { return _controls }
 export function getCanvas()      { return _renderer.domElement }
+export function getRenderer()    { return _renderer }
 export function getSunDirection(){ return _sunLight.position }
 
 export function resetCamera() {

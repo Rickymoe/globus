@@ -170,3 +170,13 @@ body {
   transform: translateX(16px);
   background: #fff;
 }
+
+.vr-label {
+  display: none;
+  font-size: 11px;
+  color: #c9d1d9;
+  white-space: nowrap;
+}
+body.vr-active .vr-label { display: inline; }
+body.vr-active .toggle-group-grid { grid-template-columns: 1fr; }
+body.vr-active .toggle-group-grid .float-toggle:last-child:nth-child(odd) { grid-column: auto; }
