@@ -1,5 +1,6 @@
 import { initScene, startLoop, resetCamera, getCompassAngle, getCamera, getControls, getCanvas, getRenderer, setSunEnabled, setMoonTempEnabled, setMoonOpacity, setApolloVisible, getSunDirection } from './globe.js'
 import { initUiTooltip } from './ui-tooltip.js'
+import { initFullscreenButton } from './fullscreen-button.js'
 import { initVRControls, updateVRControls } from './vr-controls.js'
 import { initAtmosphere, updateAtmosphere, setSunOnAtmosphere } from './atmosphere.js'
 import { initTerrain, setSeaLevel, setOpacity, updateAtmGlow } from './terrain.js'
@@ -36,6 +37,7 @@ import { initApiStatus } from './api-status.js'
 function main() {
   const container = document.getElementById('canvas-container')
   initUiTooltip()
+  initFullscreenButton()
   const { scene } = initScene(container)
 
   initStars(scene)
