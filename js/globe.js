@@ -8,7 +8,7 @@ let _lastSunMinute = -1
 let _moonTipEnabled = false
 const _toEarth = new THREE.Vector3()
 const SUN_RADIUS = 2000   // 1 AU
-const MOON_ORBIT = 200
+const MOON_ORBIT = 380
 
 function solarParams() {
   const now = new Date()
@@ -109,6 +109,11 @@ export function initScene(container) {
 
   _ambient = new THREE.AmbientLight(0xffffff, 1.0)
   _scene.add(_ambient)
+
+  // Subtle fill light so the moon always appears as a sphere, not a flat disc
+  const _fillLight = new THREE.DirectionalLight(0xffffff, 0.35)
+  _fillLight.position.set(1, 0.6, 1)
+  _scene.add(_fillLight)
 
   _sunLight = new THREE.DirectionalLight(0xfff5e4, 2.2)
   _sunLight.position.copy(calcSunPosition())
