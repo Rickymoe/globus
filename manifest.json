@@ -1,0 +1,27 @@
+{
+  "name": "Planet Simulator",
+  "short_name": "Planet Sim",
+  "description": "Interactive 3D planet simulator — real-time satellites, ISS, weather, earthquakes, aurora and more. WebXR VR support.",
+  "start_url": "/globus/",
+  "scope": "/globus/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "theme_color": "#000814",
+  "background_color": "#000000",
+  "lang": "en",
+  "categories": ["education", "entertainment"],
+  "icons": [
+    {
+      "src": "/globus/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/globus/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
